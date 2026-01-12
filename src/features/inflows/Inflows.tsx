@@ -38,6 +38,7 @@ import { Skeleton } from "../../components/ui/skeleton.tsx";
 
 export default function Inflows() {
     const [inflows, setInflows] = useState<ResponseInflowJson[]>([]);
+    const [totalAmount, setTotalAmount] = useState<number>(0);
     const [members, setMembers] = useState<UserProfiles[]>([]);
     const [worships, setWorships] = useState<ResponseWorship[]>([]);
     const [loading, setLoading] = useState(true);
@@ -53,7 +54,6 @@ export default function Inflows() {
         { value: '1000+', label: 'Acima de R$ 1.000' }
     ];
 
-    // Filtros atualizados com presets
     const [filters, setFilters] = useState({
         month: new Date().getMonth(),
         year: new Date().getFullYear(),
@@ -98,36 +98,44 @@ export default function Inflows() {
             setLoading(true);
 
             const dateRange = getDateRange(filters.month, filters.year);
+            let amountMin: number | undefined = undefined;
+            let amountMax: number | undefined = undefined;
 
+            if (filters.amountRange !== 'all') {
+                switch (filters.amountRange) {
+                    case '0-100':
+                        amountMin = 0;
+                        amountMax = 100;
+                        break;
+                    case '100-500':
+                        amountMin = 100;
+                        amountMax = 500;
+                        break;
+                    case '500-1000':
+                        amountMin = 500;
+                        amountMax = 1000;
+                        break;
+                    case '1000+':
+                        amountMin = 1000;
+                        amountMax = undefined;
+                        break;
+                    default:
+                        return true;
+                }
+            }
             const response = await inflowService.getInflows({
                 ...dateRange,
                 MemberId: filters.memberId === 'all' ? undefined : filters.memberId,
                 WorshipId: filters.worshipId === 'all' ? undefined : filters.worshipId,
+                AmountMin: filters.amountRange === 'all' ? undefined : amountMin,
+                AmountMax: filters.amountRange === 'all' ? undefined : amountMax,
                 OrderBy: filters.orderBy,
                 OrderDirection: filters.orderDirection,
             });
 
-            // Filtrar por valor no frontend
-            let filteredInflows = response.inflows;
-            if (filters.amountRange !== 'all') {
-                filteredInflows = response.inflows.filter(inflow => {
-                    const amount = inflow.amount;
-                    switch(filters.amountRange) {
-                        case '0-100':
-                            return amount >= 0 && amount <= 100;
-                        case '100-500':
-                            return amount >= 100 && amount <= 500;
-                        case '500-1000':
-                            return amount >= 500 && amount <= 1000;
-                        case '1000+':
-                            return amount >= 1000;
-                        default:
-                            return true;
-                    }
-                });
-            }
+            setInflows(response.inflows);
+            setTotalAmount(response.totalAmount);
 
-            setInflows(filteredInflows);
         } finally {
             setLoading(false);
         }
@@ -252,8 +260,6 @@ export default function Inflows() {
     };
 
     /* ===================== RENDER ===================== */
-
-    const totalAmount = inflows.reduce((sum, inflow) => sum + inflow.amount, 0);
 
     return (
         <DashboardLayout>
@@ -731,7 +737,7 @@ export default function Inflows() {
                                                         {format(new Date(inflow.date), 'dd/MM/yyyy')}
                                                     </div>
                                                     <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                                                        <Music className="w-3 h-3 text-gray-400" />
+                                                        <Church className="w-3 h-3 text-gray-400" />
                                                         {inflow.worshipInfo || '—'}
                                                     </div>
                                                 </div>

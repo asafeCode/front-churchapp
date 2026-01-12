@@ -31,6 +31,7 @@ export interface ResponseInflowJson {
 // Response completo de lista de inflows
 export interface ResponseInflowsJson {
     inflows: ResponseInflowJson[];
+    totalAmount: number;
 }
 
 // Filtros enviados para a API

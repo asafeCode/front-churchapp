@@ -4,16 +4,14 @@ import { ExpenseType } from './enums.ts';
  * Modelo do FORM (estado da UI)
  * Regras de negócio aplicadas aqui
  */
-export type ExpenseFormData =
-  | {
-      name: string;
-      type: ExpenseType.FIXA | ExpenseType.VARIAVEL;
-    }
-  | {
-      name: string;
-      type: ExpenseType.PARCELADA;
-      totalInstallments: number;
-    };
+export type ExpenseFormData = {
+    name: string;
+    type: ExpenseType;
+    currentInstallment: number | null;
+    totalInstallments: number | null;
+    amountOfEachInstallment: number | null;
+};
+
 
 /**
  * DTO que a API espera
@@ -22,7 +20,9 @@ export type ExpenseFormData =
 export interface CreateExpenseApiRequest {
   name: string;
   type: ExpenseType;
+  currentInstallment: number | null;
   totalInstallments: number | null;
+  AmountOfEachInstallment: number | null;
 }
 
 /**
@@ -39,6 +39,8 @@ export interface ResponseExpenseJson {
   name: string;
   expenseType: ExpenseType;
   totalInstallments: number | null;
+  currentInstallment: number | null;
+  amountOfEachInstallment: number | null;
 }
 
 export interface ResponseExpensesJson {

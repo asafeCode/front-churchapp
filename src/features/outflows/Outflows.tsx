@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import type { CreateOutflowRequest, ResponseShortOutflow } from "../../models/outflow.model.ts";
 import { PaymentMethod } from "../../models/enums.ts";
@@ -35,6 +35,7 @@ import { ExpenseType } from "../../models/enums.ts";
 export default function Outflows() {
     const [outflows, setOutflows] = useState<ResponseShortOutflow[]>([]);
     const [expenses, setExpenses] = useState<ResponseExpenseJson[]>([]);
+    const [totalAmount, setTotalAmount] = useState(0);
     const [loading, setLoading] = useState(true);
     const [openCreate, setOpenCreate] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
@@ -73,7 +74,6 @@ export default function Outflows() {
         description: '',
         expenseId: '',
         paymentMethod: PaymentMethod.FISICO, // Adicionado campo obrigatório
-        currentInstallment: undefined,
     });
 
     /* ===================== LOAD ===================== */
@@ -88,40 +88,41 @@ export default function Outflows() {
             setLoading(true);
 
             const dateRange = getDateRange(filters.month, filters.year);
+            let amountMin: number | undefined = undefined;
+            let amountMax: number | undefined = undefined;
+
+            if (filters.amountRange !== 'all') {
+                switch (filters.amountRange) {
+                    case '0-100':
+                        amountMin = 0;
+                        amountMax = 100;
+                        break;
+                    case '100-500':
+                        amountMin = 100;
+                        amountMax = 500;
+                        break;
+                    case '500-1000':
+                        amountMin = 500;
+                        amountMax = 1000;
+                        break;
+                    case '1000+':
+                        amountMin = 1000;
+                        amountMax = undefined;
+                        break;
+                    default:
+                        return true;
+                }
+            }
 
             const response = await outflowService.getOutflows({
                 ...dateRange,
-                expenseId: filters.expenseId === 'all' ? undefined : filters.expenseId,
+                ExpenseId: filters.expenseId === 'all' ? undefined : filters.expenseId,
+                AmountMin: filters.amountRange === 'all' ? undefined : amountMin,
+                AmountMax: filters.amountRange === 'all' ? undefined : amountMax,
             });
 
-            // Filtrar por valor no frontend
-            let filteredOutflows = response.outflows;
-            if (filters.amountRange !== 'all') {
-                filteredOutflows = response.outflows.filter(outflow => {
-                    const amount = outflow.amount;
-                    switch(filters.amountRange) {
-                        case '0-100':
-                            return amount >= 0 && amount <= 100;
-                        case '100-500':
-                            return amount >= 100 && amount <= 500;
-                        case '500-1000':
-                            return amount >= 500 && amount <= 1000;
-                        case '1000+':
-                            return amount >= 1000;
-                        default:
-                            return true;
-                    }
-                });
-            }
-
-            // Ordenar por data (mais recente primeiro)
-            filteredOutflows.sort((a, b) => {
-                const dateA = new Date(a.date).getTime();
-                const dateB = new Date(b.date).getTime();
-                return dateB - dateA; // Decrescente (mais recente primeiro)
-            });
-
-            setOutflows(filteredOutflows);
+            setOutflows(response.outflows);
+            setTotalAmount(response.totalAmount);
         } finally {
             setLoading(false);
         }
@@ -168,6 +169,13 @@ export default function Outflows() {
         return preset?.label || 'Todos os valores';
     };
 
+    const selectedExpense = expenses.find(
+        e => e.id === formData.expenseId
+    );
+
+    const isParcelada =
+        selectedExpense?.expenseType === ExpenseType.PARCELADA;
+
     const getExpenseIcon = (expenseType?: ExpenseType) => {
         switch(expenseType) {
             case ExpenseType.PARCELADA:
@@ -213,7 +221,6 @@ export default function Outflows() {
         await outflowService.createOutflow({
             ...formData,
             amount: Number(formData.amount),
-            currentInstallment: formData.currentInstallment || null,
         });
 
         toast.success('Saída criada com sucesso');
@@ -224,16 +231,12 @@ export default function Outflows() {
             description: '',
             expenseId: '',
             paymentMethod: PaymentMethod.FISICO,
-            currentInstallment: undefined,
         });
 
         loadOutflows();
     };
 
     /* ===================== RENDER ===================== */
-
-    const totalAmount = outflows.reduce((sum, outflow) => sum + outflow.amount, 0);
-
     return (
         <DashboardLayout>
             <div className="space-y-6 mt-4">
@@ -301,22 +304,7 @@ export default function Outflows() {
                                             />
                                         </div>
 
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-700">Valor</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={formData.amount}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        amount: Number(e.target.value),
-                                                    })
-                                                }
-                                                required
-                                                className="border-gray-300"
-                                            />
-                                        </div>
+
 
                                         <div className="space-y-2">
                                             <Label className="text-gray-700">Método de Pagamento</Label>
@@ -349,29 +337,50 @@ export default function Outflows() {
                                                 <SelectItem value="none">Selecione uma despesa</SelectItem>
                                                 {expenses.map((expense) => (
                                                     <SelectItem key={expense.id} value={expense.id}>
-                                                        {expense.name}
+                                                        {expense.name} | {ExpenseTypeLabels[expense.expenseType]}
                                                     </SelectItem>
                                                 ))}
                                             </SelectContent>
                                         </Select>
                                     </div>
 
-                                    {formData.expenseId && expenses.find(e => e.id === formData.expenseId)?.expenseType === ExpenseType.PARCELADA && (
+                                    {formData.expenseId && (
                                         <div className="space-y-2">
-                                            <Label className="text-gray-700">Parcela Atual</Label>
+                                            <Label className="text-gray-700">Valor</Label>
+
                                             <Input
                                                 type="number"
-                                                min={1}
-                                                value={formData.currentInstallment ?? ''}
-                                                onChange={(e) =>
+                                                step="0.01"
+                                                value={
+                                                    isParcelada
+                                                        ? selectedExpense?.amountOfEachInstallment ?? 0
+                                                        : formData.amount
+                                                }
+                                                disabled={isParcelada}
+                                                onChange={(e) => {
+                                                    if (isParcelada) return;
+
                                                     setFormData({
                                                         ...formData,
-                                                        currentInstallment: e.target.value ? Number(e.target.value) : undefined,
-                                                    })
-                                                }
-                                                placeholder="Número da parcela"
+                                                        amount: Number(e.target.value),
+                                                    });
+                                                }}
+                                                required={!isParcelada}
                                                 className="border-gray-300"
                                             />
+
+                                            {isParcelada && (
+                                                <p className="text-sm text-gray-500">
+                                                    Esta é uma despesa parcelada. Para alterar o valor da parcela,
+                                                    edite a despesa em{' '}
+                                                    <a
+                                                        href="/expenses"
+                                                        className="text-blue-600 hover:underline font-medium"
+                                                    >
+                                                        Despesas
+                                                    </a>.
+                                                </p>
+                                            )}
                                         </div>
                                     )}
 

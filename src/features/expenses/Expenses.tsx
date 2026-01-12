@@ -1,19 +1,26 @@
 'use client';
 
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ExpenseType} from '../../models/enums.ts';
 import {expenseService} from '../../services/expense.service.ts';
 import {toast} from 'sonner';
 import {DashboardLayout} from '../../components/layout/DashboardLayout.tsx';
-import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-} from '../../components/ui/dialog.tsx';
+import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '../../components/ui/dialog.tsx';
 import {Button} from '../../components/ui/button.tsx';
-import {Plus, CreditCard, DollarSign, Trash2, Edit, TrendingUp, Filter, X, CheckCircle, Receipt, ChevronDown, ChevronUp} from 'lucide-react';
+import {
+    CheckCircle,
+    ChevronDown,
+    ChevronUp,
+    CreditCard,
+    DollarSign,
+    Edit,
+    Filter,
+    Plus,
+    Receipt,
+    Trash2,
+    TrendingUp,
+    X
+} from 'lucide-react';
 import {Label} from '@radix-ui/react-label';
 import {Input} from '../../components/ui/input.tsx';
 import {EnumSelect} from '../../components/ui/enum-select.tsx';
@@ -21,22 +28,24 @@ import {ExpenseTypeLabels} from '../../models/enum-labels.ts';
 import {Card, CardContent} from '../../components/ui/card.tsx';
 import {Badge} from '../../components/ui/badge.tsx';
 import {Skeleton} from '../../components/ui/skeleton.tsx';
-import type {ExpenseFormData, ResponseExpensesJson} from '../../models/expense.model.ts';
+import type {ExpenseFormData, ResponseExpenseJson, ResponseExpensesJson} from '../../models/expense.model.ts';
 
 export default function Expenses() {
     const [expenses, setExpenses] = useState<ResponseExpensesJson>({expenses: []});
     const [loading, setLoading] = useState(true);
     const [openCreate, setOpenCreate] = useState(false);
-    const [filterType, setFilterType] = useState<string>('all');
+    const [filterType, setFilterType] = useState<ExpenseType | string>('all');
     const [searchTerm, setSearchTerm] = useState('');
-    const [editingExpense, setEditingExpense] = useState<any>(null);
+    const [editingExpense, setEditingExpense] = useState<ResponseExpenseJson | null> (null);
     const [openEdit, setOpenEdit] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
 
     const [formData, setFormData] = useState<ExpenseFormData>({
         name: '',
-        type: ExpenseType.PARCELADA,
-        totalInstallments: 0,
+        type: ExpenseType.FIXA,
+        totalInstallments: null,
+        currentInstallment: null,
+        amountOfEachInstallment: null,
     });
 
     /* ===================== LOAD ===================== */
@@ -63,8 +72,10 @@ export default function Expenses() {
         setOpenCreate(false);
         setFormData({
             name: '',
-            type: ExpenseType.PARCELADA,
-            totalInstallments: 0,
+            type: ExpenseType.FIXA,
+            totalInstallments: null,
+            currentInstallment: null,
+            amountOfEachInstallment: null,
         });
         loadExpenses();
     };
@@ -77,11 +88,14 @@ export default function Expenses() {
         await expenseService.updateExpense(editingExpense.id, formData);
         toast.success('Despesa atualizada com sucesso');
         setOpenEdit(false);
+
         setEditingExpense(null);
         setFormData({
             name: '',
             type: ExpenseType.PARCELADA,
             totalInstallments: 0,
+            currentInstallment: 0,
+            amountOfEachInstallment: 0
         });
         loadExpenses();
     };
@@ -97,7 +111,7 @@ export default function Expenses() {
 
     /* ===================== FILTERS ===================== */
     const filteredExpenses = expenses.expenses.filter(expense => {
-        const matchesType = filterType === 'all' || expense.expenseType === filterType;
+        const matchesType = filterType === 'all' || expense.expenseType === Number(filterType);
         const matchesSearch = expense.name.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesType && matchesSearch;
     });
@@ -141,12 +155,14 @@ export default function Expenses() {
         }
     };
 
-    const handleEditClick = (expense: any) => {
+    const handleEditClick = (expense: ResponseExpenseJson) => {
         setEditingExpense(expense);
         setFormData({
             name: expense.name,
             type: expense.expenseType,
-            totalInstallments: expense.totalInstallments || 0,
+            totalInstallments: expense.expenseType === ExpenseType.PARCELADA ? expense.totalInstallments ?? 1 : null,
+            currentInstallment:  1,
+            amountOfEachInstallment: 1
         });
         setOpenEdit(true);
     };
@@ -266,7 +282,7 @@ export default function Expenses() {
                 </div>
 
                 {/* FILTERS - Responsive */}
-                {(showFilters || window.innerWidth >= 768) && (
+                <div className={`${showFilters ? 'block' : 'hidden'}`}>
                     <Card className="bg-white border border-gray-200">
                         <CardContent className="pt-6">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
@@ -313,14 +329,13 @@ export default function Expenses() {
                                         Tipo de despesa
                                     </Label>
                                     <EnumSelect
-                                        value={filterType as any}
+                                        value={Number(filterType) as ExpenseType}
                                         labels={{
-                                            all: 'Todos os tipos',
                                             [ExpenseType.FIXA]: ExpenseTypeLabels[ExpenseType.FIXA],
                                             [ExpenseType.PARCELADA]: ExpenseTypeLabels[ExpenseType.PARCELADA],
                                             [ExpenseType.VARIAVEL]: ExpenseTypeLabels[ExpenseType.VARIAVEL],
                                         }}
-                                        onChange={(type) => setFilterType(type as string)}
+                                        onChange={(type) => setFilterType(type)}
                                         placeholder="Filtrar por tipo"
                                     />
                                 </div>
@@ -335,14 +350,14 @@ export default function Expenses() {
                                     )}
                                     {filterType !== 'all' && (
                                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            Tipo: {ExpenseTypeLabels[filterType as ExpenseType]}
+                                            Tipo: {ExpenseTypeLabels[Number(filterType) as ExpenseType]}
                                         </Badge>
                                     )}
                                 </div>
                             )}
                         </CardContent>
                     </Card>
-                )}
+                </div>
 
                 {/* EXPENSES LIST */}
                 <Card className="bg-white border border-gray-200">
@@ -420,11 +435,11 @@ export default function Expenses() {
                                             </div>
 
                                             <div className="space-y-3">
-                                                {expense.expenseType === ExpenseType.PARCELADA && expense.totalInstallments > 0 && (
+                                                {expense.expenseType === ExpenseType.PARCELADA && expense.totalInstallments != null && expense.totalInstallments > 0 && (
                                                     <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
-                                                        <span className="text-sm text-blue-700 font-medium">Parcelas</span>
+                                                        <span className="text-sm text-blue-700 font-medium">Parcela: R${expense.amountOfEachInstallment}</span>
                                                         <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                                                            {expense.totalInstallments} parcela{expense.totalInstallments > 1 ? 's' : ''}
+                                                            {expense.currentInstallment} | {expense.totalInstallments} parcela{ expense.totalInstallments > 1 ? 's' : ''}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -495,18 +510,49 @@ export default function Expenses() {
                                     <Label className="text-gray-700">Total de Parcelas</Label>
                                     <Input
                                         type="number"
-                                        min={1}
-                                        value={formData.totalInstallments}
+                                        min={2}
+                                        value={formData.totalInstallments ?? 1}
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
-                                                totalInstallments: Number(e.target.value),
+                                                totalInstallments: Number(e.target.value)
+                                            })
+                                        }
+                                        required
+                                        className="border-gray-300"
+                                    />
+                                    <Label className="text-gray-700">Parcela Atual</Label>
+                                    <Input
+                                        type="number"
+                                        min={0}
+                                        value={formData.currentInstallment ?? 1}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                currentInstallment: Number(e.target.value)
+                                            })
+                                        }
+                                        required
+                                        className="border-gray-300"
+                                    />
+                                    <Label className="text-gray-700">Valor da Parcela</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.01"
+                                        min={2}
+                                        value={formData.amountOfEachInstallment ?? 1}
+                                        onChange={(e) =>
+                                            setFormData({
+                                                ...formData,
+                                                amountOfEachInstallment: Number(e.target.value)
                                             })
                                         }
                                         required
                                         className="border-gray-300"
                                     />
                                 </div>
+
+
                             )}
 
                             <div className="flex gap-3 pt-4">
@@ -565,7 +611,7 @@ export default function Expenses() {
                                         setFormData({
                                             ...formData,
                                             type,
-                                            totalInstallments: type === ExpenseType.PARCELADA ? formData.totalInstallments || 1 : 0,
+                                            totalInstallments: type === ExpenseType.PARCELADA ? formData.totalInstallments ?? 1 : null,
                                         });
                                     }}
                                 />
@@ -577,7 +623,7 @@ export default function Expenses() {
                                     <Input
                                         type="number"
                                         min={1}
-                                        value={formData.totalInstallments}
+                                        value={formData.totalInstallments ?? ''}
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,

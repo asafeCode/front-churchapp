@@ -58,7 +58,7 @@ export default function Tenants() {
         })
 
         toast.success('Tenant criado com sucesso')
-
+        await loadTenants()
         setShowCreateDialog(false)
         setFormData({ name: '', domainName: '' })
         setIsSubmitting(false)

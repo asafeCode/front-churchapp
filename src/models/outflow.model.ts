@@ -8,10 +8,15 @@ export interface CreateOutflowRequest {
   paymentMethod: PaymentMethod;
   amount: number | string;
   description?: string;
-  currentInstallment?: number | null;
   expenseId: string;
 }
-
+export interface CreateOutflowFormData {
+    date: string; // ISO date string
+    paymentMethod: PaymentMethod;
+    amount: number | null;
+    description?: string;
+    expenseId: string;
+}
 // -------------------------
 // RESPONSE (item do GET)
 // -------------------------
@@ -30,6 +35,7 @@ export interface ResponseShortOutflow {
 // -------------------------
 export interface OutflowsResponse {
   outflows: ResponseShortOutflow[];
+  totalAmount: number;
 }
 
 // -------------------------
@@ -40,9 +46,9 @@ export interface OutflowFilters {
   EndDate?: string;
   PaymentMethod?: PaymentMethod;
   AmountMin?: number;
-  MmountMax?: number;
+  AmountMax?: number;
   Description?: string;
-  CurrentInstallment?: number;
+  ExpenseType?: number;
   ExpenseId?: string;
   CreatedByUserId?: string;
 }

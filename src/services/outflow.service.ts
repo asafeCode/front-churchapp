@@ -3,7 +3,7 @@ import type {
     CreateOutflowRequest,
     CreateOutflowResponse,
     OutflowsResponse,
-    OutflowFilters,
+    OutflowFilters, CreateOutflowFormData,
 } from '../models/outflow.model';
 
 export const outflowService = {
@@ -19,7 +19,11 @@ export const outflowService = {
   },
 
   createOutflow: async (outflowData: CreateOutflowRequest): Promise<CreateOutflowResponse> => {
-    const response = await api.post<CreateOutflowResponse>('/outflow', outflowData);
+      const payload : CreateOutflowFormData = {
+          ...outflowData,
+          amount: outflowData.amount == 0 ? null : Number(outflowData.amount),
+      }
+    const response = await api.post<CreateOutflowResponse>('/outflow', payload);
     return response.data;
   },
 };

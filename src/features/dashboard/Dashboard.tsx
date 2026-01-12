@@ -71,20 +71,11 @@ export default function Dashboard() {
       setInflows(inflowsData);
       setOutflows(outflowsData);
 
-      const totalInflows = inflowsData.reduce(
-        (sum, inflow) => sum + inflow.amount,
-        0
-      );
-
-      const totalOutflows = outflowsData.reduce(
-        (sum, outflow) => sum + outflow.amount,
-        0
-      );
 
       setStats({
-        totalInflows,
-        totalOutflows,
-        balance: totalInflows - totalOutflows,
+          totalInflows: inflowsRes.totalAmount,
+          totalOutflows: outflowsRes.totalAmount,
+          balance: inflowsRes.totalAmount - outflowsRes.totalAmount,
       });
     } finally {
       setLoading(false);

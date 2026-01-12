@@ -6,7 +6,7 @@ import type {
 
 export const tenantService = {
   createTenant: async (data: CreateTenantRequest): Promise<ResponseCreatedTenant> => {
-    const response = await api.post<ResponseCreatedTenant>('/owner/tenants', data);
+    const response = await api.post<ResponseCreatedTenant>('/tenant', data);
     return response.data;
   },
     getTenants: async () : Promise<ResponseTenantsJson> => {

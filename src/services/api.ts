@@ -6,6 +6,8 @@ import type {ResponseTokens} from "../models/user.model.ts";
 import {toast} from "sonner";
 
 const API_BASE_URL = 'https://tesouraria-api-production.up.railway.app';
+//const API_BASE_URL = 'https://localhost:7144';
+
 let refreshingPromise : Promise<ResponseTokens> | null = null;
 const api = axios.create({
     baseURL: API_BASE_URL,
