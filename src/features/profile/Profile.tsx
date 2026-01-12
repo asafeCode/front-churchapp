@@ -463,7 +463,13 @@ export default function Profile() {
                                                 <Label className="text-sm text-stone-500">Nome de usuário</Label>
                                                 <div className="flex items-center gap-2 p-3 bg-stone-50 rounded-md">
                                                     <Mail className="w-4 h-4 text-stone-400" />
-                                                    <span className="font-medium">{profileData.username}</span>
+                                                    <Input
+                                                        placeholder="Seu nome de Usuário"
+                                                        value={profileData.username}
+                                                        onChange={(e) =>
+                                                            setProfileData({ ...profileData, username: e.target.value })
+                                                        }
+                                                    />
                                                 </div>
                                             </div>
 
