@@ -153,17 +153,14 @@ export default function Profile() {
             return
         }
 
-        try {
-            await userService.changePassword({
-                password: passwordData.password,
-                newPassword: passwordData.newPassword,
-            })
+        await userService.changePassword({
+            password: passwordData.password,
+            newPassword: passwordData.newPassword,
+        })
 
-            toast.success('Senha alterada com sucesso')
-            setPasswordData({ password: '', newPassword: '', confirmPassword: '' })
-        } catch (error) {
-            toast.error('Erro ao alterar senha')
-        }
+        toast.success('Senha alterada com sucesso')
+        setPasswordData({password: '', newPassword: '', confirmPassword: ''})
+
     }
 
     /* ===================== LOADING ===================== */
@@ -172,7 +169,7 @@ export default function Profile() {
         return (
             <DashboardLayout>
                 <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"/>
                     <p className="text-stone-600">Carregando suas informações...</p>
                 </div>
             </DashboardLayout>
@@ -202,7 +199,7 @@ export default function Profile() {
                                     <span className="text-sm font-medium text-blue-900">Perfil completo</span>
                                     <span className="text-sm font-bold text-blue-700">{profileCompletion}%</span>
                                 </div>
-                                <Progress value={profileCompletion} className="h-2" />
+                                <Progress value={profileCompletion} className="h-2"/>
                                 <p className="text-xs text-blue-700 mt-2">
                                     {profileCompletion < 100
                                         ? `Complete mais ${100 - profileCompletion}% para finalizar`
@@ -216,11 +213,11 @@ export default function Profile() {
                 <Tabs defaultValue="profile" className="space-y-6">
                     <TabsList className="grid w-full md:w-auto md:inline-flex">
                         <TabsTrigger value="profile" className="flex items-center gap-2">
-                            <UserCircle className="w-4 h-4" />
+                            <UserCircle className="w-4 h-4"/>
                             <span>Informações Pessoais</span>
                         </TabsTrigger>
                         <TabsTrigger value="password" className="flex items-center gap-2">
-                            <Shield className="w-4 h-4" />
+                            <Shield className="w-4 h-4"/>
                             <span>Segurança</span>
                         </TabsTrigger>
                     </TabsList>
@@ -236,7 +233,7 @@ export default function Profile() {
                                         <CardHeader className="bg-gradient-to-r from-blue-50 to-white border-b">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-lg bg-blue-100">
-                                                    <User className="w-5 h-5 text-blue-600" />
+                                                    <User className="w-5 h-5 text-blue-600"/>
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-xl">Dados Pessoais</CardTitle>
@@ -250,28 +247,31 @@ export default function Profile() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label className="flex items-center gap-2 text-sm">
-                                                        <User className="w-4 h-4 text-stone-500" />
+                                                        <User className="w-4 h-4 text-stone-500"/>
                                                         Nome completo
                                                     </Label>
                                                     <Input
                                                         placeholder="Digite seu nome completo"
                                                         value={profileData.fullName}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, fullName: e.target.value })
+                                                            setProfileData({...profileData, fullName: e.target.value})
                                                         }
                                                     />
                                                 </div>
 
                                                 <div className="space-y-2">
                                                     <Label className="flex items-center gap-2 text-sm">
-                                                        <Cake className="w-4 h-4 text-stone-500" />
+                                                        <Cake className="w-4 h-4 text-stone-500"/>
                                                         Data de nascimento
                                                     </Label>
                                                     <Input
                                                         type="date"
                                                         value={profileData.dateOfBirth}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, dateOfBirth: e.target.value })
+                                                            setProfileData({
+                                                                ...profileData,
+                                                                dateOfBirth: e.target.value
+                                                            })
                                                         }
                                                     />
                                                 </div>
@@ -285,7 +285,7 @@ export default function Profile() {
                                                         placeholder={"Selecione seu gênero"}
                                                         value={profileData.gender ?? Gender.FEMININO}
                                                         onChange={(value) =>
-                                                            setProfileData({ ...profileData, gender: value })
+                                                            setProfileData({...profileData, gender: value})
                                                         }
                                                         labels={GenderLabels}>
                                                     </EnumSelect>
@@ -293,14 +293,14 @@ export default function Profile() {
 
                                                 <div className="space-y-2">
                                                     <Label className="flex items-center gap-2 text-sm">
-                                                        <Phone className="w-4 h-4 text-stone-500" />
+                                                        <Phone className="w-4 h-4 text-stone-500"/>
                                                         Telefone
                                                     </Label>
                                                     <Input
                                                         placeholder="(11) 99999-9999"
                                                         value={profileData.phone}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, phone: e.target.value })
+                                                            setProfileData({...profileData, phone: e.target.value})
                                                         }
                                                     />
                                                 </div>
@@ -313,7 +313,7 @@ export default function Profile() {
                                         <CardHeader className="bg-gradient-to-r from-green-50 to-white border-b">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-lg bg-green-100">
-                                                    <Briefcase className="w-5 h-5 text-green-600" />
+                                                    <Briefcase className="w-5 h-5 text-green-600"/>
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-xl">Informações Profissionais</CardTitle>
@@ -326,14 +326,17 @@ export default function Profile() {
                                         <CardContent className="pt-6">
                                             <div className="space-y-2">
                                                 <Label className="flex items-center gap-2 text-sm">
-                                                    <Briefcase className="w-4 h-4 text-stone-500" />
+                                                    <Briefcase className="w-4 h-4 text-stone-500"/>
                                                     Profissão/Atuação
                                                 </Label>
                                                 <Input
                                                     placeholder="Ex: Engenheiro, Professor, Estudante..."
                                                     value={profileData.professionalWork}
                                                     onChange={(e) =>
-                                                        setProfileData({ ...profileData, professionalWork: e.target.value })
+                                                        setProfileData({
+                                                            ...profileData,
+                                                            professionalWork: e.target.value
+                                                        })
                                                     }
                                                 />
                                             </div>
@@ -345,7 +348,7 @@ export default function Profile() {
                                         <CardHeader className="bg-gradient-to-r from-purple-50 to-white border-b">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-lg bg-purple-100">
-                                                    <Church className="w-5 h-5 text-purple-600" />
+                                                    <Church className="w-5 h-5 text-purple-600"/>
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-xl">Informações Eclesiásticas</CardTitle>
@@ -359,14 +362,14 @@ export default function Profile() {
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div className="space-y-2">
                                                     <Label className="flex items-center gap-2 text-sm">
-                                                        <Home className="w-4 h-4 text-stone-500" />
+                                                        <Home className="w-4 h-4 text-stone-500"/>
                                                         Data de entrada na igreja
                                                     </Label>
                                                     <Input
                                                         type="date"
                                                         value={profileData.entryDate}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, entryDate: e.target.value })
+                                                            setProfileData({...profileData, entryDate: e.target.value})
                                                         }
                                                     />
                                                 </div>
@@ -380,22 +383,29 @@ export default function Profile() {
                                                         type="date"
                                                         value={profileData.conversionDate}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, conversionDate: e.target.value })
+                                                            setProfileData({
+                                                                ...profileData,
+                                                                conversionDate: e.target.value
+                                                            })
                                                         }
                                                     />
                                                 </div>
 
                                                 <div className="space-y-2 md:col-span-2">
                                                     <div className="flex items-center gap-3 p-3 border rounded-md">
-                                                        <Droplets className="w-5 h-5 text-blue-500" />
+                                                        <Droplets className="w-5 h-5 text-blue-500"/>
                                                         <div className="flex-1">
                                                             <Label className="font-medium">Já foi batizado?</Label>
-                                                            <p className="text-sm text-stone-500">Marque se você já recebeu o batismo nas águas</p>
+                                                            <p className="text-sm text-stone-500">Marque se você já
+                                                                recebeu o batismo nas águas</p>
                                                         </div>
                                                         <Checkbox
                                                             checked={profileData.isBaptized}
                                                             onCheckedChange={(checked) =>
-                                                                setProfileData({ ...profileData, isBaptized: checked === true })
+                                                                setProfileData({
+                                                                    ...profileData,
+                                                                    isBaptized: checked === true
+                                                                })
                                                             }
                                                         />
                                                     </div>
@@ -412,7 +422,7 @@ export default function Profile() {
                                         <CardHeader className="bg-gradient-to-r from-orange-50 to-white border-b">
                                             <div className="flex items-center gap-3">
                                                 <div className="p-2 rounded-lg bg-orange-100">
-                                                    <MapPin className="w-5 h-5 text-orange-600" />
+                                                    <MapPin className="w-5 h-5 text-orange-600"/>
                                                 </div>
                                                 <div>
                                                     <CardTitle className="text-xl">Localização</CardTitle>
@@ -425,28 +435,28 @@ export default function Profile() {
                                         <CardContent className="pt-6 space-y-4">
                                             <div className="space-y-2">
                                                 <Label className="flex items-center gap-2 text-sm">
-                                                    <Building className="w-4 h-4 text-stone-500" />
+                                                    <Building className="w-4 h-4 text-stone-500"/>
                                                     Cidade
                                                 </Label>
                                                 <Input
                                                     placeholder="Sua cidade"
                                                     value={profileData.city}
                                                     onChange={(e) =>
-                                                        setProfileData({ ...profileData, city: e.target.value })
+                                                        setProfileData({...profileData, city: e.target.value})
                                                     }
                                                 />
                                             </div>
 
                                             <div className="space-y-2">
                                                 <Label className="flex items-center gap-2 text-sm">
-                                                    <Navigation className="w-4 h-4 text-stone-500" />
+                                                    <Navigation className="w-4 h-4 text-stone-500"/>
                                                     Bairro
                                                 </Label>
                                                 <Input
                                                     placeholder="Seu bairro"
                                                     value={profileData.neighborhood}
                                                     onChange={(e) =>
-                                                        setProfileData({ ...profileData, neighborhood: e.target.value })
+                                                        setProfileData({...profileData, neighborhood: e.target.value})
                                                     }
                                                 />
                                             </div>
@@ -462,12 +472,12 @@ export default function Profile() {
                                             <div className="space-y-2">
                                                 <Label className="text-sm text-stone-500">Nome de usuário</Label>
                                                 <div className="flex items-center gap-2 p-3 bg-stone-50 rounded-md">
-                                                    <Mail className="w-4 h-4 text-stone-400" />
+                                                    <Mail className="w-4 h-4 text-stone-400"/>
                                                     <Input
                                                         placeholder="Seu nome de Usuário"
                                                         value={profileData.username}
                                                         onChange={(e) =>
-                                                            setProfileData({ ...profileData, username: e.target.value })
+                                                            setProfileData({...profileData, username: e.target.value})
                                                         }
                                                     />
                                                 </div>
@@ -487,7 +497,7 @@ export default function Profile() {
                                         <CardContent className="p-6">
                                             <div className="text-center space-y-4">
                                                 <div className="p-3 rounded-full bg-blue-100 inline-flex">
-                                                    <Save className="w-6 h-6 text-blue-600" />
+                                                    <Save className="w-6 h-6 text-blue-600"/>
                                                 </div>
                                                 <div>
                                                     <h3 className="font-semibold text-lg">Salvar Alterações</h3>
@@ -503,12 +513,13 @@ export default function Profile() {
                                                 >
                                                     {saving ? (
                                                         <>
-                                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
+                                                            <div
+                                                                className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"/>
                                                             Salvando...
                                                         </>
                                                     ) : (
                                                         <>
-                                                            <Save className="w-4 h-4 mr-2" />
+                                                            <Save className="w-4 h-4 mr-2"/>
                                                             Salvar Alterações
                                                         </>
                                                     )}
@@ -530,7 +541,7 @@ export default function Profile() {
                             <CardHeader className="bg-gradient-to-r from-red-50 to-white border-b">
                                 <div className="flex items-center gap-3">
                                     <div className="p-2 rounded-lg bg-red-100">
-                                        <Shield className="w-5 h-5 text-red-600" />
+                                        <Shield className="w-5 h-5 text-red-600"/>
                                     </div>
                                     <div>
                                         <CardTitle className="text-xl">Segurança da Conta</CardTitle>
@@ -545,7 +556,7 @@ export default function Profile() {
                                     <div className="space-y-4">
                                         <div className="space-y-2">
                                             <Label className="flex items-center gap-2">
-                                                <Lock className="w-4 h-4" />
+                                                <Lock className="w-4 h-4"/>
                                                 Senha atual
                                             </Label>
                                             <Input
@@ -553,17 +564,17 @@ export default function Profile() {
                                                 placeholder="Digite sua senha atual"
                                                 value={passwordData.password}
                                                 onChange={(e) =>
-                                                    setPasswordData({ ...passwordData, password: e.target.value })
+                                                    setPasswordData({...passwordData, password: e.target.value})
                                                 }
                                                 required
                                             />
                                         </div>
 
-                                        <Separator />
+                                        <Separator/>
 
                                         <div className="space-y-2">
                                             <Label className="flex items-center gap-2">
-                                                <Lock className="w-4 h-4" />
+                                                <Lock className="w-4 h-4"/>
                                                 Nova senha
                                             </Label>
                                             <Input
@@ -571,7 +582,7 @@ export default function Profile() {
                                                 placeholder="Digite a nova senha"
                                                 value={passwordData.newPassword}
                                                 onChange={(e) =>
-                                                    setPasswordData({ ...passwordData, newPassword: e.target.value })
+                                                    setPasswordData({...passwordData, newPassword: e.target.value})
                                                 }
                                                 required
                                             />
@@ -582,7 +593,7 @@ export default function Profile() {
 
                                         <div className="space-y-2">
                                             <Label className="flex items-center gap-2">
-                                                <Lock className="w-4 h-4" />
+                                                <Lock className="w-4 h-4"/>
                                                 Confirmar nova senha
                                             </Label>
                                             <Input
@@ -590,7 +601,7 @@ export default function Profile() {
                                                 placeholder="Digite novamente a nova senha"
                                                 value={passwordData.confirmPassword}
                                                 onChange={(e) =>
-                                                    setPasswordData({ ...passwordData, confirmPassword: e.target.value })
+                                                    setPasswordData({...passwordData, confirmPassword: e.target.value})
                                                 }
                                                 required
                                             />
@@ -599,7 +610,7 @@ export default function Profile() {
 
                                     <div className="p-4 bg-amber-50 border border-amber-200 rounded-md">
                                         <div className="flex items-start gap-3">
-                                            <Shield className="w-5 h-5 text-amber-600 mt-0.5" />
+                                            <Shield className="w-5 h-5 text-amber-600 mt-0.5"/>
                                             <div>
                                                 <h4 className="font-medium text-amber-900">Dicas de segurança</h4>
                                                 <ul className="text-sm text-amber-800 mt-1 space-y-1">
@@ -616,7 +627,7 @@ export default function Profile() {
                                         type="submit"
                                         className="w-full bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700"
                                     >
-                                        <Lock className="w-4 h-4 mr-2" />
+                                        <Lock className="w-4 h-4 mr-2"/>
                                         Alterar Senha
                                     </Button>
                                 </form>
