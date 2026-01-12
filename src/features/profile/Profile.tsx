@@ -153,10 +153,12 @@ export default function Profile() {
             return
         }
 
-        await userService.changePassword({
+        const passwordRequest : ChangePasswordRequest = {
             password: passwordData.password,
-            newPassword: passwordData.newPassword,
-        })
+            newPassword: passwordData.newPassword
+        }
+
+        await userService.changePassword(passwordRequest)
 
         toast.success('Senha alterada com sucesso')
         setPasswordData({password: '', newPassword: '', confirmPassword: ''})
