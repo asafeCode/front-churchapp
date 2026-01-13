@@ -9,6 +9,7 @@ import type {
 } from "../../models/user.model.ts";
 import { UserRole } from "../../models/enums.ts";
 import { userService } from "../../services/user.service.ts";
+import { tenantService } from "../../services/tenant.service.ts"; // Importe o serviço
 import { toast } from "sonner";
 import { UserRoleLabels } from "../../models/enum-labels.ts";
 import { DashboardLayout } from "../../components/layout/DashboardLayout.tsx";
@@ -24,8 +25,26 @@ import {
     AlertDialogTitle,
     AlertDialogDescription
 } from "../../components/ui/alert-dialog.tsx";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "../../components/ui/dialog.tsx";
-import { Search, Trash2, UserPlus, Users, ChevronDown, ChevronUp, X, Phone, MapPin, Calendar, Droplets, Home, Briefcase } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "../../components/ui/dialog.tsx";
+import {
+    Search,
+    Trash2,
+    UserPlus,
+    Users,
+    ChevronDown,
+    ChevronUp,
+    X,
+    Phone,
+    MapPin,
+    Calendar,
+    Droplets,
+    Home,
+    Briefcase,
+    Link,
+    Copy,
+    Check,
+    Share2
+} from "lucide-react";
 import { Skeleton } from "../../components/ui/skeleton.tsx";
 import { EnumSelect } from "../../components/ui/enum-select.tsx";
 import { Label } from "../../components/ui/label.tsx";
@@ -34,31 +53,32 @@ import { Badge } from "../../components/ui/badge.tsx";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-interface MemberWithDetails extends UserProfiles {
-    details?: UserProfileResponse;
-    detailsLoading?: boolean;
-}
-
 export default function Members() {
     const [members, setMembers] = useState<MemberWithDetails[]>([]);
     const [loading, setLoading] = useState(true);
     const [deleteTarget, setDeleteTarget] = useState<MemberWithDetails | null>(null);
     const [openCreate, setOpenCreate] = useState(false);
+    const [openInvite, setOpenInvite] = useState(false); // Novo estado para modal de convite
     const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
 
     const [filters, setFilters] = useState<UserFilters>({});
     const [search, setSearch] = useState<string>("");
 
+    // Estados para o convite
+    const [inviteLink, setInviteLink] = useState<string>("");
+    const [generatingInvite, setGeneratingInvite] = useState(false);
+    const [copied, setCopied] = useState(false);
+
     const [formData, setFormData] = useState<RegisterUserRequest>({
         name: '',
         role: UserRole.MEMBRO,
-        dateOfBirth: '',
-        password: '',
     });
 
     useEffect(() => {
         loadMembers();
     }, []);
+
+    const defaultPassword = `${formData.name}123`;
 
     const loadMembers = async (customFilters: UserFilters = {}) => {
         try {
@@ -70,10 +90,55 @@ export default function Members() {
         }
     };
 
+    const handleGenerateInvite = async () => {
+        try {
+            setGeneratingInvite(true);
+            const response = await tenantService.createInvite();
+            setInviteLink(response.link);
+            toast.success("Link de convite gerado com sucesso!");
+        } finally {
+            setGeneratingInvite(false);
+        }
+    };
+
+    // Função para copiar o link
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(inviteLink);
+            setCopied(true);
+            toast.success("Link copiado para a área de transferência!");
+
+            // Reset do estado "copiado" após 2 segundos
+            setTimeout(() => {
+                setCopied(false);
+            }, 2000);
+        } catch {
+            toast.error("Erro ao copiar link");
+        }
+    };
+
+    const handleShare = async () => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: 'Convite para se juntar à igreja',
+                    text: 'Use este link para se cadastrar como membro:',
+                    url: inviteLink,
+                });
+                toast.success("Convite compartilhado!");
+            } catch (error) {
+                if (error instanceof Error && error.name !== 'AbortError') {
+                    toast.error("Erro ao compartilhar");
+                }
+            }
+        } else {
+            await handleCopyLink();
+        }
+    };
+
     const toggleExpand = async (id: string) => {
         const isExpanding = !expandedIds.has(id);
 
-        // Atualiza o estado de expansão
         setExpandedIds(prev => {
             const newSet = new Set(prev);
             if (newSet.has(id)) {
@@ -84,7 +149,6 @@ export default function Members() {
             return newSet;
         });
 
-        // Se está expandindo, carrega os detalhes
         if (isExpanding) {
             setMembers(prev => prev.map(member =>
                 member.id === id
@@ -122,8 +186,8 @@ export default function Members() {
         await userService.registerUser(formData);
         toast.success('Membro criado com sucesso');
         setOpenCreate(false);
-        setFormData({ name: '', role: UserRole.MEMBRO, dateOfBirth: '', password: '' });
-        loadMembers();
+        setFormData({ name: '', role: UserRole.MEMBRO});
+        await loadMembers();
     };
 
     const handleDelete = async () => {
@@ -131,7 +195,7 @@ export default function Members() {
         await userService.deleteUserById(deleteTarget.id);
         toast.success('Membro removido');
         setDeleteTarget(null);
-        loadMembers();
+        await loadMembers();
     };
 
     const formatDateSafe = (dateString?: string) => {
@@ -156,70 +220,166 @@ export default function Members() {
     return (
         <DashboardLayout>
             <div className="space-y-6 mt-4">
-                {/* Header e botão novo membro */}
+                {/* Header com botões de Novo Membro e Convite */}
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                         <h1 className="text-2xl md:text-4xl font-heading font-semibold">Membros</h1>
                         <Badge variant="outline" className="text-sm">{members.length}</Badge>
                     </div>
 
-                    <Dialog open={openCreate} onOpenChange={setOpenCreate}>
-                        <DialogTrigger asChild>
-                            <Button className="flex items-center gap-2">
-                                <UserPlus className="w-4 h-4" /> Novo Membro
-                            </Button>
-                        </DialogTrigger>
+                    <div className="flex gap-2">
+                        {/* Botão de Gerar Convite */}
+                        <Dialog open={openInvite} onOpenChange={setOpenInvite}>
+                            <DialogTrigger asChild>
+                                <Button variant="outline" className="flex items-center gap-2">
+                                    <Link className="w-4 h-4" /> Gerar Convite
+                                </Button>
+                            </DialogTrigger>
 
-                        <DialogContent className="w-full max-w-md">
-                            <DialogHeader>
-                                <DialogTitle>Criar Membro</DialogTitle>
-                            </DialogHeader>
+                            <DialogContent className="w-full max-w-lg">
+                                <DialogHeader>
+                                    <DialogTitle>Gerar Link de Convite</DialogTitle>
+                                    <DialogDescription>
+                                        Crie um link de convite para novos membros se cadastrarem
+                                    </DialogDescription>
+                                </DialogHeader>
 
-                            <form onSubmit={handleCreate} className="space-y-4">
-                                <div>
-                                    <Label>Nome</Label>
-                                    <Input
-                                        value={formData.name}
-                                        onChange={e => setFormData({ ...formData, name: e.target.value })}
-                                        required
-                                    />
+                                <div className="space-y-6">
+                                    {/* Instruções */}
+                                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                                        <p className="text-sm text-blue-800">
+                                            <strong>Como funciona:</strong> Este link permite que novos membros se cadastrem
+                                            automaticamente na sua congregação. Compartilhe por WhatsApp, e-mail ou mensagem.
+                                        </p>
+                                    </div>
+
+                                    {/* Botão para gerar */}
+                                    {!inviteLink ? (
+                                        <div className="text-center py-4">
+                                            <Button
+                                                onClick={handleGenerateInvite}
+                                                disabled={generatingInvite}
+                                                className="flex items-center gap-2"
+                                            >
+                                                {generatingInvite ? (
+                                                    <>
+                                                        <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                                        Gerando...
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <Link className="w-4 h-4" />
+                                                        Gerar Link de Convite
+                                                    </>
+                                                )}
+                                            </Button>
+                                        </div>
+                                    ) : (
+                                        /* Link gerado */
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label className="text-sm font-medium mb-2 block">Link de Convite Gerado:</Label>
+                                                <div className="flex items-center gap-2">
+                                                    <Input
+                                                        value={inviteLink}
+                                                        readOnly
+                                                        className="font-mono text-sm"
+                                                    />
+                                                    <Button
+                                                        size="icon"
+                                                        onClick={handleCopyLink}
+                                                        className="shrink-0"
+                                                    >
+                                                        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                                                    </Button>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    onClick={handleShare}
+                                                    className="flex-1 flex items-center justify-center gap-2"
+                                                >
+                                                    <Share2 className="w-4 h-4" />
+                                                    Compartilhar
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handleGenerateInvite}
+                                                    disabled={generatingInvite}
+                                                    className="flex-1"
+                                                >
+                                                    {generatingInvite ? "Gerando..." : "Gerar Novo"}
+                                                </Button>
+                                            </div>
+
+                                            {/* QR Code (opcional - se quiser adicionar depois) */}
+                                            <div className="pt-4 border-t">
+                                                <p className="text-sm text-stone-500 mb-2">
+                                                    Você também pode copiar o link manualmente acima ou compartilhar diretamente
+                                                </p>
+                                                <p className="text-xs text-stone-400">
+                                                    O link expira em 30 minutos
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                            </DialogContent>
+                        </Dialog>
 
-                                <div>
-                                    <Label>Função</Label>
-                                    <EnumSelect<UserRole>
-                                        value={formData.role}
-                                        onChange={role => setFormData({ ...formData, role })}
-                                        labels={UserRoleLabels}
-                                    />
-                                </div>
+                        {/* Botão Novo Membro (existente) */}
+                        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+                            <DialogTrigger asChild>
+                                <Button className="flex items-center gap-2">
+                                    <UserPlus className="w-4 h-4" /> Novo Membro
+                                </Button>
+                            </DialogTrigger>
 
-                                <div>
-                                    <Label>Data de Nascimento</Label>
-                                    <Input
-                                        type="date"
-                                        value={formData.dateOfBirth}
-                                        onChange={e => setFormData({ ...formData, dateOfBirth: e.target.value })}
-                                        required
-                                    />
-                                </div>
+                            <DialogContent className="w-full max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>Criar Membro</DialogTitle>
+                                </DialogHeader>
 
-                                <div>
-                                    <Label>Senha</Label>
-                                    <Input
-                                        type="password"
-                                        value={formData.password}
-                                        onChange={e => setFormData({ ...formData, password: e.target.value })}
-                                        required
-                                    />
-                                </div>
+                                <form onSubmit={handleCreate} className="space-y-4">
+                                    <div>
+                                        <Label>Nome</Label>
+                                        <Input
+                                            value={formData.name}
+                                            onChange={e => setFormData({ ...formData, name: e.target.value })}
+                                            required
+                                        />
+                                    </div>
 
-                                <Button type="submit" className="w-full">Criar</Button>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
+                                    <div>
+                                        <Label>Função</Label>
+                                        <EnumSelect<UserRole>
+                                            value={formData.role}
+                                            onChange={role => setFormData({ ...formData, role })}
+                                            labels={UserRoleLabels}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <Label>Senha (gerada automaticamente)</Label>
+                                        <Input
+                                            type="password"
+                                            value={defaultPassword}
+                                            disabled
+                                        />
+                                        <p className="text-sm text-gray-500">
+                                            A senha inicial será o nome do usuário seguido de <strong>123</strong>.
+                                            O usuário poderá alterá-la no primeiro acesso.
+                                        </p>
+                                    </div>
+                                    <Button type="submit" className="w-full">Criar</Button>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
                 </div>
 
+                {/* Resto do código permanece igual... */}
                 {/* Filtros */}
                 <Card>
                     <CardContent className="mt-6 md:mt-4 flex flex-col gap-4 md:grid md:grid-cols-12 md:items-end">
@@ -273,7 +433,7 @@ export default function Members() {
                     </CardContent>
                 </Card>
 
-                {/* Lista de membros */}
+                {/* Lista de membros (código permanece igual) */}
                 <Card>
                     <CardContent className="mt-6 flex flex-col gap-4">
                         {loading ? (
@@ -472,4 +632,9 @@ export default function Members() {
             </div>
         </DashboardLayout>
     );
+}
+
+interface MemberWithDetails extends UserProfiles {
+    details?: UserProfileResponse;
+    detailsLoading?: boolean;
 }

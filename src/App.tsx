@@ -17,6 +17,8 @@ import type {JSX} from 'react';
 import {AuthProvider} from "./contexts/AuthProvider.tsx";
 import {Toaster} from "./components/ui/sonner.tsx";
 import Reports from "./features/reports/Reports.tsx";
+import {MemberRegister} from "./features/auth/MemberRegister.tsx";
+import {InviteEntry} from "./features/auth/InviteEntry.tsx";
 
 function App(): JSX.Element {
     return (
@@ -25,6 +27,8 @@ function App(): JSX.Element {
                 <Routes>
                     <Route path="/login" element={<Login/>}/>
                     <Route path="/owner-login" element={<OwnerLogin/>}/>
+                    <Route path="/register/invite" element={<InviteEntry />} />
+                    <Route path="/register" element={<MemberRegister />} />
 
                     <Route
                         path="/dashboard"

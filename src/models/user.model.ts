@@ -3,12 +3,15 @@ import { UserRole, Gender } from './enums';
 // -------------------------
 // REQUESTS
 // -------------------------
+export interface MemberRegisterRequest {
+    name: string;
+    password: string;
+    inviteCode: string;
+}
 
 export interface RegisterUserRequest {
     name: string;
     role: UserRole;
-    dateOfBirth: string; // ISO date string
-    password: string;
 }
 
 export interface UpdateUserRequest {

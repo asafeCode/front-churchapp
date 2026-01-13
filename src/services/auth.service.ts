@@ -2,10 +2,10 @@
 import api from './api';
 import { tokenService } from './token.service';
 import type {
-  DoLoginRequest,
-  OwnerLoginRequest,
-  ResponseLoggedUser,
-  ResponseLoggedOwner,
+    DoLoginRequest,
+    OwnerLoginRequest,
+    ResponseLoggedUser,
+    ResponseLoggedOwner, MemberRegisterRequest,
 } from '../models/user.model';
 import type { AuthUser, AuthOwner } from '../models/auth.model';
 
@@ -24,10 +24,22 @@ export const authService = {
     tokenService.setUser(user);
     return responseLoggedUser
   },
+    registerMember: async (userData: MemberRegisterRequest): Promise<ResponseLoggedUser> => {
+        const { data } = await api.post<ResponseLoggedUser>('/auth/register/member', userData);
+        tokenService.setTokens(data.tokens.accessToken, data.tokens.refreshToken);
 
+        const user: AuthUser = {
+            name: data.name,
+            role: data.role,
+            isOwner: false
+        };
+
+        tokenService.setUser(user);
+        return data;
+    },
   /** Login de Owner */
   ownerLogin: async (data: OwnerLoginRequest): Promise<ResponseLoggedOwner> => {
-    const response = await api.post<ResponseLoggedOwner>('/auth/owner/login', data);
+    const response = await api.post<ResponseLoggedOwner>('/auth/login/owner', data);
     const responseLoggedOwner = response.data;
 
     tokenService.setTokens(responseLoggedOwner.tokens.accessToken, null);

@@ -49,7 +49,7 @@ export const userService = {
     },
 
     registerUser: async (userData: RegisterUserRequest): Promise<ResponseRegisteredUser> => {
-        const response = await api.post<ResponseRegisteredUser>('/users/register', userData);
+        const response = await api.post<ResponseRegisteredUser>('/auth/register/users', userData);
         return response.data;
     },
 };

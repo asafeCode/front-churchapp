@@ -6,7 +6,13 @@ import {
     type AuthUser, isAdmin, isMember,
     isOwner,
 } from '../models/auth.model';
-import type {DoLoginRequest, OwnerLoginRequest, ResponseLoggedOwner, ResponseLoggedUser,} from '../models/user.model';
+import type {
+    DoLoginRequest,
+    MemberRegisterRequest,
+    OwnerLoginRequest,
+    ResponseLoggedOwner,
+    ResponseLoggedUser,
+} from '../models/user.model';
 import {authService} from '../services/auth.service';
 import { AuthContext } from "./AuthContext.ts";
 
@@ -19,6 +25,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         credentials: DoLoginRequest
     ): Promise<ResponseLoggedUser> => {
         const result = await authService.login(credentials);
+        setUser(authService.getCurrentUser());
+        return result;
+    };
+
+    const memberRegister = async (
+        credentials: MemberRegisterRequest
+    ): Promise<ResponseLoggedUser> => {
+        const result = await authService.registerMember(credentials);
         setUser(authService.getCurrentUser());
         return result;
     };
@@ -42,6 +56,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         login,
         ownerLogin,
+        memberRegister,
         logout,
 
         isAuthenticated: !!user,

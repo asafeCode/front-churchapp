@@ -5,8 +5,7 @@ import type {ResponseErrorJson} from '../models/error.model';
 import type {ResponseTokens} from "../models/user.model.ts";
 import {toast} from "sonner";
 
-const API_BASE_URL = 'https://tesouraria-api-production.up.railway.app';
-//const API_BASE_URL = 'https://localhost:7144';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 let refreshingPromise : Promise<ResponseTokens> | null = null;
 const api = axios.create({
@@ -40,7 +39,7 @@ api.interceptors.response.use(
             errors: error.response?.data?.errors ?? ['Servidor fora do ar'],
             tokenIsExpired: error.response?.data?.tokenIsExpired ?? false,
         }
-
+        console.log(errorData)
         if (!errorData.tokenIsExpired) for (const error of errorData.errors) toast.error(error)
 
         if (!originalRequest) return Promise.reject(errorData);

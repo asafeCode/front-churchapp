@@ -4,7 +4,7 @@ import type {
     DoLoginRequest,
     OwnerLoginRequest,
     ResponseLoggedUser,
-    ResponseLoggedOwner,
+    ResponseLoggedOwner, MemberRegisterRequest,
 } from './user.model';
 
 /* =========================
@@ -40,6 +40,7 @@ export interface AuthContextValue {
 
     login: (credentials: DoLoginRequest) => Promise<ResponseLoggedUser>;
     ownerLogin: (credentials: OwnerLoginRequest) => Promise<ResponseLoggedOwner>;
+    memberRegister: (credentials: MemberRegisterRequest) => Promise<ResponseLoggedUser>;
     logout: () => void;
 
     isAuthenticated: boolean;
