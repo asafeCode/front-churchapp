@@ -63,8 +63,8 @@ export default function Outflows() {
         const finalDate = new Date(year, month + 1, 0);
 
         return {
-            dataInicial: format(initialDate, 'yyyy-MM-dd'),
-            dataFinal: format(finalDate, 'yyyy-MM-dd'),
+            InitialDate: format(initialDate, 'yyyy-MM-dd'),
+            EndDate: format(finalDate, 'yyyy-MM-dd'),
         };
     };
 

@@ -25,6 +25,7 @@ export const InflowTypeLabels = {
   [InflowType.DIZIMO]: 'Dízimo',
   [InflowType.OFERTA]: 'Oferta',
   [InflowType.OUTROS]: 'Outros',
+    [InflowType.TODOS]: 'Todos',
 } as const;
 
 export const getInflowTypeLabel = (value: InflowType): string =>

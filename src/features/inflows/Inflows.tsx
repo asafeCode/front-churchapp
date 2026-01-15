@@ -57,6 +57,7 @@ export default function Inflows() {
     const [filters, setFilters] = useState({
         month: new Date().getMonth(),
         year: new Date().getFullYear(),
+        inflowType: InflowType.TODOS,
         memberId: 'all',
         worshipId: 'all',
         amountRange: 'all',
@@ -71,7 +72,7 @@ export default function Inflows() {
 
         return {
             InitialDate: format(initialDate, 'yyyy-MM-dd'),
-            FinalDate: format(finalDate, 'yyyy-MM-dd'),
+            EndDate: format(finalDate, 'yyyy-MM-dd'),
         };
     };
 
@@ -125,6 +126,7 @@ export default function Inflows() {
             }
             const response = await inflowService.getInflows({
                 ...dateRange,
+                Type: filters.inflowType === InflowType.TODOS ? undefined : filters.inflowType,
                 MemberId: filters.memberId === 'all' ? undefined : filters.memberId,
                 WorshipId: filters.worshipId === 'all' ? undefined : filters.worshipId,
                 AmountMin: filters.amountRange === 'all' ? undefined : amountMin,
@@ -157,6 +159,7 @@ export default function Inflows() {
         setFilters({
             month: new Date().getMonth(),
             year: new Date().getFullYear(),
+            inflowType: InflowType.TODOS,
             memberId: 'all',
             worshipId: 'all',
             amountRange: 'all',
@@ -168,6 +171,7 @@ export default function Inflows() {
 
     const hasActiveFilters = () => {
         return filters.memberId !== 'all' ||
+            filters.inflowType !== InflowType.TODOS ||
             filters.worshipId !== 'all' ||
             filters.amountRange !== 'all' ||
             filters.orderBy !== InflowOrderBy.DATA ||
@@ -357,12 +361,11 @@ export default function Inflows() {
                                             <Input
                                                 type="number"
                                                 step="0.01"
-                                                value={formData.amount}
-                                                onChange={(e) =>
-                                                    setFormData({
-                                                        ...formData,
-                                                        amount: Number(e.target.value),
-                                                    })
+                                                value={formData.amount ?? ''}
+                                                onChange={(e) => {
+                                                    const value = e.target.value;
+                                                    setFormData({...formData, amount: value === "" ? 0 : Number(value)})
+                                                }
                                                 }
                                                 required
                                                 className="border-gray-300"
@@ -638,6 +641,20 @@ export default function Inflows() {
                                             ))}
                                         </SelectContent>
                                     </Select>
+                                </div>
+
+                                <div className="space-y-2">
+                                    <div className="space-y-2">
+                                        <Label className="text-gray-700">Tipo</Label>
+                                        <EnumSelect
+                                            value={filters.inflowType}
+                                            labels={InflowTypeLabels}
+                                            onChange={(type) =>
+                                                setFilters({...filters, inflowType: type})
+                                            }
+                                            placeholder="Selecione o tipo"
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* PRESET DE VALOR */}
