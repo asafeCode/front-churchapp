@@ -44,7 +44,7 @@ api.interceptors.response.use(
 
         if (!originalRequest) return Promise.reject(errorData);
 
-        if (error.response?.status === 401 && errorData?.tokenIsExpired && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             const refreshToken = tokenService.getRefreshToken();
