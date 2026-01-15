@@ -43,9 +43,9 @@ export default function Expenses() {
     const [formData, setFormData] = useState<ExpenseFormData>({
         name: '',
         type: ExpenseType.FIXA,
-        totalInstallments: null,
-        currentInstallment: null,
-        amountOfEachInstallment: null,
+        totalInstallments: 0,
+        currentInstallment: 0,
+        amountOfEachInstallment: 0,
     });
 
     /* ===================== LOAD ===================== */
@@ -73,9 +73,9 @@ export default function Expenses() {
         setFormData({
             name: '',
             type: ExpenseType.FIXA,
-            totalInstallments: null,
-            currentInstallment: null,
-            amountOfEachInstallment: null,
+            totalInstallments: 0,
+            currentInstallment: 0,
+            amountOfEachInstallment: 0,
         });
         loadExpenses();
     };
@@ -525,7 +525,7 @@ export default function Expenses() {
                                     <Input
                                         type="number"
                                         min={0}
-                                        value={formData.currentInstallment ?? 1}
+                                        value={formData.currentInstallment ?? 0}
                                         onChange={(e) =>
                                             setFormData({
                                                 ...formData,
