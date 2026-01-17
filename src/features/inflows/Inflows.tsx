@@ -1,14 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import type { CreateInflowRequest, ResponseInflowJson } from "../../models/inflow.model.ts";
-import type { UserProfiles } from "../../models/user.model.ts";
-import { InflowOrderBy, InflowType, OrderDirection, PaymentMethod } from "../../models/enums.ts";
-import { inflowService } from "../../services/inflow.service.ts";
-import { toast } from "sonner";
-import { userService } from "../../services/user.service.ts";
-import { DashboardLayout } from "../../components/layout/DashboardLayout.tsx";
+import React, {useEffect, useState} from 'react';
+import {format} from 'date-fns';
+import type {CreateInflowRequest, ResponseInflowJson} from "../../models/inflow.model.ts";
+import type {UserProfiles} from "../../models/user.model.ts";
+import {InflowOrderBy, InflowType, OrderDirection, PaymentMethod} from "../../models/enums.ts";
+import {inflowService} from "../../services/inflow.service.ts";
+import {toast} from "sonner";
+import {userService} from "../../services/user.service.ts";
+import {DashboardLayout} from "../../components/layout/DashboardLayout.tsx";
 import {
     Dialog,
     DialogContent,
@@ -17,11 +17,26 @@ import {
     DialogTitle,
     DialogTrigger
 } from "../../components/ui/dialog.tsx";
-import { Button } from "../../components/ui/button.tsx";
-import { Plus, Filter, X, Calendar, User, Music, ArrowUpDown, ChevronDown, ChevronUp, Church, Receipt, CreditCard, DollarSign } from "lucide-react";
-import { Label } from "@radix-ui/react-label";
-import { Input } from "../../components/ui/input.tsx";
-import { EnumSelect } from "../../components/ui/enum-select.tsx";
+import {Button} from "../../components/ui/button.tsx";
+import {
+    Plus,
+    Filter,
+    X,
+    Calendar,
+    User,
+    Music,
+    ArrowUpDown,
+    ChevronDown,
+    ChevronUp,
+    Church,
+    Receipt,
+    CreditCard,
+    DollarSign,
+    FileText, CalendarHeart, CalendarClock, CalendarX
+} from "lucide-react";
+import {Label} from "@radix-ui/react-label";
+import {Input} from "../../components/ui/input.tsx";
+import {EnumSelect} from "../../components/ui/enum-select.tsx";
 import {
     DayOfWeekLabels,
     InflowOrderByLabels,
@@ -29,12 +44,14 @@ import {
     OrderDirectionLabels,
     PaymentMethodLabels
 } from "../../models/enum-labels.ts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select.tsx";
-import { Card, CardContent } from "../../components/ui/card.tsx";
-import { worshipService } from "../../services/worship.service.ts";
-import type { ResponseWorship } from "../../models/worship.model.ts";
-import { Badge } from "../../components/ui/badge.tsx";
-import { Skeleton } from "../../components/ui/skeleton.tsx";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../components/ui/select.tsx";
+import {Card, CardContent} from "../../components/ui/card.tsx";
+import {worshipService} from "../../services/worship.service.ts";
+import type {ResponseWorship} from "../../models/worship.model.ts";
+import {Badge} from "../../components/ui/badge.tsx";
+import {Skeleton} from "../../components/ui/skeleton.tsx";
+import {MoneyInput} from "../../components/ui/money-input.tsx";
+import {ptBR} from "date-fns/locale";
 
 export default function Inflows() {
     const [inflows, setInflows] = useState<ResponseInflowJson[]>([]);
@@ -47,11 +64,11 @@ export default function Inflows() {
 
     // Presets de valores para filtro
     const amountPresets = [
-        { value: 'all', label: 'Todos os valores' },
-        { value: '0-100', label: 'Até R$ 100' },
-        { value: '100-500', label: 'R$ 100 - 500' },
-        { value: '500-1000', label: 'R$ 500 - 1.000' },
-        { value: '1000+', label: 'Acima de R$ 1.000' }
+        {value: 'all', label: 'Todos os valores'},
+        {value: '0-100', label: 'Até R$ 100'},
+        {value: '100-500', label: 'R$ 100 - 500'},
+        {value: '500-1000', label: 'R$ 500 - 1.000'},
+        {value: '1000+', label: 'Acima de R$ 1.000'}
     ];
 
     const [filters, setFilters] = useState({
@@ -177,7 +194,19 @@ export default function Inflows() {
             filters.orderBy !== InflowOrderBy.DATA ||
             filters.orderDirection !== OrderDirection.DECRESCENTE;
     };
+    const isTodayDate = (date: Date): boolean => {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear();
+    };
 
+    const isRecentDate = (date: Date, days: number): boolean => {
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - date.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= days;
+    };
     const getMonthName = (monthIndex: number) => {
         const monthNames = [
             'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -204,29 +233,29 @@ export default function Inflows() {
     };
 
     const getInflowTypeIcon = (type: InflowType) => {
-        switch(type) {
+        switch (type) {
             case InflowType.DIZIMO:
-                return <Church className="w-4 h-4 text-green-600" />;
+                return <Church className="w-4 h-4 text-green-600"/>;
             case InflowType.OFERTA:
-                return <DollarSign className="w-4 h-4 text-blue-500" />;
+                return <DollarSign className="w-4 h-4 text-blue-500"/>;
             default:
-                return <Receipt className="w-4 h-4 text-green-400" />;
+                return <Receipt className="w-4 h-4 text-green-400"/>;
         }
     };
 
     const getPaymentMethodIcon = (method: PaymentMethod) => {
-        switch(method) {
+        switch (method) {
             case PaymentMethod.FISICO:
-                return <DollarSign className="w-4 h-4 text-green-500" />;
+                return <DollarSign className="w-4 h-4 text-green-500"/>;
             case PaymentMethod.DIGITAL:
-                return <CreditCard className="w-4 h-4 text-blue-400" />;
+                return <CreditCard className="w-4 h-4 text-blue-400"/>;
             default:
-                return <DollarSign className="w-4 h-4 text-gray-500" />;
+                return <DollarSign className="w-4 h-4 text-gray-500"/>;
         }
     };
 
     const getInflowTypeColor = (type: InflowType) => {
-        switch(type) {
+        switch (type) {
             case InflowType.DIZIMO:
                 return 'bg-green-50 text-green-700 border-green-200';
             case InflowType.OFERTA:
@@ -286,15 +315,15 @@ export default function Inflows() {
                             onClick={() => setShowFilters(!showFilters)}
                             className="flex items-center gap-2"
                         >
-                            <Filter className="w-4 h-4" />
+                            <Filter className="w-4 h-4"/>
                             {showFilters ? (
                                 <>
-                                    <ChevronUp className="w-4 h-4" />
+                                    <ChevronUp className="w-4 h-4"/>
                                     <span className="hidden sm:inline">Ocultar Filtros</span>
                                 </>
                             ) : (
                                 <>
-                                    <ChevronDown className="w-4 h-4" />
+                                    <ChevronDown className="w-4 h-4"/>
                                     <span className="hidden sm:inline">Mostrar Filtros</span>
                                 </>
                             )}
@@ -303,7 +332,7 @@ export default function Inflows() {
                         <Dialog open={openCreate} onOpenChange={setOpenCreate}>
                             <DialogTrigger asChild>
                                 <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white">
-                                    <Plus className="w-4 h-4" />
+                                    <Plus className="w-4 h-4"/>
                                     <span className="hidden md:inline">Nova Entrada</span>
                                     <span className="md:hidden">Nova</span>
                                 </Button>
@@ -358,16 +387,18 @@ export default function Inflows() {
 
                                         <div className="space-y-2">
                                             <Label className="text-gray-700">Valor</Label>
-                                            <Input
-                                                type="number"
-                                                step="0.01"
-                                                value={formData.amount ?? ''}
-                                                onChange={(e) => {
-                                                    const value = e.target.value;
-                                                    setFormData({...formData, amount: value === "" ? 0 : Number(value)})
+                                            <MoneyInput
+                                                value={
+                                                    formData.amount
+                                                        ? String(formData.amount)
+                                                        : ""
                                                 }
+                                                onChange={(value) =>
+                                                    setFormData({
+                                                        ...formData,
+                                                        amount: Number(value)
+                                                    })
                                                 }
-                                                required
                                                 className="border-gray-300"
                                             />
                                         </div>
@@ -477,9 +508,10 @@ export default function Inflows() {
                 <div className={`${showFilters ? 'block' : 'hidden'}`}>
                     <Card className="bg-white border border-gray-200">
                         <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                            <div
+                                className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                                 <div className="flex items-center gap-2">
-                                    <Filter className="w-4 h-4 text-gray-500" />
+                                    <Filter className="w-4 h-4 text-gray-500"/>
                                     <h3 className="font-medium text-gray-900">Filtros</h3>
                                 </div>
 
@@ -492,12 +524,12 @@ export default function Inflows() {
                                     >
                                         {showFilters ? (
                                             <>
-                                                <ChevronUp className="w-3 h-3 mr-1" />
+                                                <ChevronUp className="w-3 h-3 mr-1"/>
                                                 Ocultar
                                             </>
                                         ) : (
                                             <>
-                                                <ChevronDown className="w-3 h-3 mr-1" />
+                                                <ChevronDown className="w-3 h-3 mr-1"/>
                                                 Mostrar
                                             </>
                                         )}
@@ -510,7 +542,7 @@ export default function Inflows() {
                                             onClick={handleClearFilters}
                                             className="text-gray-600 hover:text-gray-900"
                                         >
-                                            <X className="w-3 h-3 mr-1" />
+                                            <X className="w-3 h-3 mr-1"/>
                                             Limpar filtros
                                         </Button>
                                     )}
@@ -520,25 +552,29 @@ export default function Inflows() {
                             {hasActiveFilters() && (
                                 <div className="flex flex-wrap gap-2 mb-4">
                                     {filters.memberId !== 'all' && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            <User className="w-3 h-3 mr-1" />
+                                        <Badge variant="outline"
+                                               className="bg-green-50 text-green-700 border-green-200">
+                                            <User className="w-3 h-3 mr-1"/>
                                             {getSelectedMemberName()}
                                         </Badge>
                                     )}
                                     {filters.worshipId !== 'all' && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            <Music className="w-3 h-3 mr-1" />
+                                        <Badge variant="outline"
+                                               className="bg-green-50 text-green-700 border-green-200">
+                                            <Music className="w-3 h-3 mr-1"/>
                                             {getSelectedWorshipName()}
                                         </Badge>
                                     )}
                                     {filters.amountRange !== 'all' && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                        <Badge variant="outline"
+                                               className="bg-green-50 text-green-700 border-green-200">
                                             Valor: {getAmountRangeLabel()}
                                         </Badge>
                                     )}
                                     {filters.orderBy !== InflowOrderBy.DATA && (
-                                        <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                            <ArrowUpDown className="w-3 h-3 mr-1" />
+                                        <Badge variant="outline"
+                                               className="bg-green-50 text-green-700 border-green-200">
+                                            <ArrowUpDown className="w-3 h-3 mr-1"/>
                                             Ordenado por: {InflowOrderByLabels[filters.orderBy]}
                                         </Badge>
                                     )}
@@ -552,16 +588,16 @@ export default function Inflows() {
                                     <Select
                                         value={filters.month.toString()}
                                         onValueChange={(value) =>
-                                            setFilters({ ...filters, month: Number(value) })
+                                            setFilters({...filters, month: Number(value)})
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
-                                            <SelectValue />
+                                            <SelectValue/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[
-                                                'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                                                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+                                                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
                                             ].map((month, index) => (
                                                 <SelectItem key={index} value={index.toString()}>
                                                     {month}
@@ -577,11 +613,11 @@ export default function Inflows() {
                                     <Select
                                         value={filters.year.toString()}
                                         onValueChange={(value) =>
-                                            setFilters({ ...filters, year: Number(value) })
+                                            setFilters({...filters, year: Number(value)})
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
-                                            <SelectValue />
+                                            <SelectValue/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[2023, 2024, 2025, 2026].map((year) => (
@@ -599,7 +635,7 @@ export default function Inflows() {
                                     <Select
                                         value={filters.memberId}
                                         onValueChange={(value) =>
-                                            setFilters({ ...filters, memberId: value })
+                                            setFilters({...filters, memberId: value})
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
@@ -624,7 +660,7 @@ export default function Inflows() {
                                     <Select
                                         value={filters.worshipId}
                                         onValueChange={(value) =>
-                                            setFilters({ ...filters, worshipId: value })
+                                            setFilters({...filters, worshipId: value})
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
@@ -663,11 +699,11 @@ export default function Inflows() {
                                     <Select
                                         value={filters.amountRange}
                                         onValueChange={(value) =>
-                                            setFilters({ ...filters, amountRange: value })
+                                            setFilters({...filters, amountRange: value})
                                         }
                                     >
                                         <SelectTrigger className="w-full border-gray-300">
-                                            <SelectValue />
+                                            <SelectValue/>
                                         </SelectTrigger>
                                         <SelectContent>
                                             {amountPresets.map((preset) => (
@@ -687,7 +723,7 @@ export default function Inflows() {
                                             value={filters.orderBy}
                                             labels={InflowOrderByLabels}
                                             onChange={(value) =>
-                                                setFilters({ ...filters, orderBy: value })
+                                                setFilters({...filters, orderBy: value})
                                             }
                                             placeholder="Ordenar por"
                                         />
@@ -699,7 +735,7 @@ export default function Inflows() {
                                             value={filters.orderDirection}
                                             labels={OrderDirectionLabels}
                                             onChange={(value) =>
-                                                setFilters({ ...filters, orderDirection: value })
+                                                setFilters({...filters, orderDirection: value})
                                             }
                                             placeholder="Direção"
                                         />
@@ -712,85 +748,169 @@ export default function Inflows() {
 
                 {/* LISTA DE ENTRADAS */}
                 <Card className="bg-white border border-gray-200">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-3 md:p-4 lg:p-6">
                         {loading ? (
-                            <div className="space-y-4">
+                            <div className="space-y-3 md:space-y-4">
                                 {[1, 2, 3].map(i => (
-                                    <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                                    <Skeleton key={i} className="h-28 md:h-32 w-full rounded-lg" />
                                 ))}
                             </div>
                         ) : inflows.length === 0 ? (
-                            <div className="text-center py-12">
-                                <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                                    <Calendar className="w-8 h-8 text-gray-400" />
+                            <div className="flex flex-col items-center justify-center min-h-[300px] md:min-h-[350px] text-center p-4 md:p-6"
+                                 data-testid="empty-inflows-state">
+                                <div className="relative mb-4 md:mb-6">
+                                    <div className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-br from-green-50 to-emerald-50 flex items-center justify-center">
+                                        <Calendar className="w-8 h-8 md:w-10 md:h-10 text-green-400" />
+                                    </div>
+                                    <div className="absolute -top-1 -right-1 md:-top-2 md:-right-2 w-8 h-8 md:w-10 md:h-10 rounded-full bg-red-50 flex items-center justify-center">
+                                        <CalendarX className="w-4 h-4 md:w-5 md:h-5 text-red-400" />
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                <h3 className="text-lg md:text-xl font-semibold text-gray-900 mb-2">
                                     Nenhuma entrada encontrada
                                 </h3>
-                                <p className="text-gray-600 mb-4">
+                                <p className="text-gray-600 text-sm md:text-base max-w-md mb-4 md:mb-6">
                                     {hasActiveFilters()
-                                        ? "Tente ajustar os filtros ou limpar para ver todas as entradas"
+                                        ? "Tente ajustar os filtros para encontrar entradas registradas"
                                         : `Não há entradas registradas para ${getMonthName(filters.month)} ${filters.year}`}
                                 </p>
                                 {hasActiveFilters() && (
                                     <Button
                                         variant="outline"
                                         onClick={handleClearFilters}
-                                        className="mt-2"
+                                        size="sm"
+                                        className="gap-1 md:gap-2 text-xs md:text-sm border-gray-300 hover:border-gray-400"
                                     >
-                                        <X className="w-4 h-4 mr-2" />
+                                        <X className="w-3 h-3 md:w-4 md:h-4" />
                                         Limpar filtros
                                     </Button>
                                 )}
                             </div>
                         ) : (
-                            <div className="space-y-4">
-                                {inflows.map((inflow) => (
-                                    <Card key={inflow.id} className="bg-white border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                                        <CardContent className="p-4">
-                                            <div className="flex justify-between items-start mb-3">
-                                                <div>
-                                                    <div className="font-medium text-lg text-gray-900">
-                                                        {format(new Date(inflow.date), 'dd/MM/yyyy')}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+                                {inflows.map((inflow) => {
+                                    const formattedDate = new Date(inflow.date);
+                                    const isToday = isTodayDate(formattedDate);
+                                    const isRecent = isRecentDate(formattedDate, 7);
+
+                                    return (
+                                        <div
+                                            key={inflow.id}
+                                            className="group bg-white rounded-lg md:rounded-xl border border-gray-200 p-3 md:p-4 lg:p-5 hover:border-green-300 hover:shadow-md transition-all duration-300"
+                                            data-testid="inflow-card"
+                                        >
+                                            {/* Header - Mais compacto */}
+                                            <div className="flex items-start justify-between mb-3 md:mb-4">
+                                                <div className="flex items-center gap-2 md:gap-3">
+                                                    <div className={`p-1.5 md:p-2 rounded ${isToday ? 'bg-green-100' : 'bg-gray-100'}`}>
+                                                        {isToday ? (
+                                                            <CalendarHeart className="w-4 h-4 md:w-5 md:h-5 text-green-600" />
+                                                        ) : isRecent ? (
+                                                            <CalendarClock className="w-4 h-4 md:w-5 md:h-5 text-blue-600" />
+                                                        ) : (
+                                                            <Calendar className="w-4 h-4 md:w-5 md:h-5 text-gray-600" />
+                                                        )}
                                                     </div>
-                                                    <div className="text-sm text-gray-600 flex items-center gap-1 mt-1">
-                                                        <Church className="w-3 h-3 text-gray-400" />
-                                                        {inflow.worshipInfo || '—'}
+                                                    <div>
+                                                        <div className="flex flex-col md:flex-row md:items-center gap-0.5 md:gap-2">
+                    <span className="font-semibold text-gray-900 text-sm md:text-base">
+                      {format(formattedDate, 'dd/MM/yyyy')}
+                    </span>
+                                                            {isToday && (
+                                                                <span className="px-1.5 py-0.5 text-xs font-medium bg-green-100 text-green-800 rounded-full w-fit">
+                        Hoje
+                      </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="flex items-center gap-1 text-xs md:text-sm text-gray-500">
+                                                            <Calendar className="w-3 h-3 md:w-3.5 md:h-3.5" />
+                                                            {format(formattedDate, 'EEE', { locale: ptBR })}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                                <div className="flex flex-col items-end gap-2">
-                                                    <Badge variant="outline" className={`${getInflowTypeColor(inflow.inflowType)} flex items-center gap-1`}>
+
+                                                {/* Tipo de entrada - tamanho ajustado */}
+                                                <Badge className={`${getInflowTypeColor(inflow.inflowType)} font-medium px-2 py-1 md:px-3 md:py-1.5 text-xs md:text-sm`}>
+                                                    <div className="flex items-center gap-1 md:gap-1.5">
                                                         {getInflowTypeIcon(inflow.inflowType)}
-                                                        {InflowTypeLabels[inflow.inflowType]}
-                                                    </Badge>
-                                                    <div className="flex items-center gap-1 text-sm text-gray-500">
+                                                        <span className="truncate max-w-[60px] md:max-w-none">
+                    {InflowTypeLabels[inflow.inflowType]}
+                  </span>
+                                                    </div>
+                                                </Badge>
+                                            </div>
+
+                                            {/* Informações principais - mais compactas */}
+                                            <div className="space-y-2 md:space-y-3 mb-3 md:mb-4">
+                                                {/* Descrição */}
+                                                <div className="bg-gray-50 rounded p-2 md:p-3">
+                                                    <div className="flex items-start gap-1.5 md:gap-2">
+                                                        <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="text-xs md:text-sm text-gray-600 font-medium mb-0.5 md:mb-1">Descrição</p>
+                                                            <p className="text-gray-900 text-sm truncate md:line-clamp-1" title={inflow.description || "Sem descrição"}>
+                                                                {inflow.description || "Sem descrição"}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Culto e Membro - em linha no mobile */}
+                                                <div className="flex md:grid md:grid-cols-2 gap-2 md:gap-3">
+                                                    <div className="flex-1 md:flex-none bg-blue-50 rounded p-2 md:p-3">
+                                                        <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
+                                                            <Church className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-500" />
+                                                            <span className="text-xs font-medium text-blue-700">Culto</span>
+                                                        </div>
+                                                        <p className="text-xs md:text-sm text-gray-900 font-medium truncate" title={inflow.worshipInfo}>
+                                                            {inflow.worshipInfo || "Não informado"}
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="flex-1 md:flex-none bg-purple-50 rounded p-2 md:p-3">
+                                                        <div className="flex items-center gap-1.5 md:gap-2 mb-0.5 md:mb-1">
+                                                            <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-500" />
+                                                            <span className="text-xs font-medium text-purple-700">Membro</span>
+                                                        </div>
+                                                        <p className="text-xs md:text-sm text-gray-900 font-medium truncate" title={inflow.memberName}>
+                                                            {inflow.memberName || "Não informado"}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Método de pagamento */}
+                                                <div className="flex items-center justify-between bg-gray-50 rounded p-2 md:p-3">
+                                                    <div className="flex items-center gap-1.5 md:gap-2">
                                                         {getPaymentMethodIcon(inflow.paymentMethod)}
-                                                        {PaymentMethodLabels[inflow.paymentMethod]}
+                                                        <span className="text-xs md:text-sm text-gray-600 truncate">Pagamento</span>
                                                     </div>
+                                                    <span className="text-xs md:text-sm font-medium text-gray-900 truncate ml-2">
+                  {PaymentMethodLabels[inflow.paymentMethod]}
+                </span>
                                                 </div>
                                             </div>
 
-                                            <div className="space-y-2 mb-4">
-                                                <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                    <span className="text-sm text-gray-600">Membro</span>
-                                                    <div className="flex items-center gap-2">
-                                                        <User className="w-3 h-3 text-gray-400" />
-                                                        <span className="font-medium text-gray-900">{inflow.memberName || '—'}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="pt-3 border-t border-gray-200">
+                                            {/* Valor - mais compacto */}
+                                            <div className="pt-2 md:pt-3 border-t border-gray-200">
                                                 <div className="flex items-center justify-between">
-                                                    <span className="font-medium text-gray-900">Valor</span>
-                                                    <span className="font-mono font-bold text-lg text-green-600">
-                                                        R$ {inflow.amount.toFixed(2)}
-                                                    </span>
+                                                    <div className="flex items-center gap-1.5 md:gap-2">
+                                                        <span className="text-xs md:text-sm text-gray-600">Valor</span>
+                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse hidden md:block"></div>
+                                                    </div>
+                                                    <div className="flex items-baseline gap-0.5 md:gap-1">
+                                                        <span className="text-xs md:text-sm text-gray-500">R$</span>
+                                                        <span className="text-lg md:text-xl lg:text-2xl font-bold text-green-600 md:bg-gradient-to-r md:from-green-600 md:to-emerald-600 md:bg-clip-text md:text-transparent">
+                    {inflow.amount.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                    })}
+                  </span>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </CardContent>
-                                    </Card>
-                                ))}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         )}
                     </CardContent>

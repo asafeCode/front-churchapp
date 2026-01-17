@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
-import { format } from 'date-fns';
-import type { CreateOutflowRequest, ResponseShortOutflow } from "../../models/outflow.model.ts";
-import { PaymentMethod } from "../../models/enums.ts";
-import { outflowService } from "../../services/outflow.service.ts";
-import { expenseService } from "../../services/expense.service.ts";
-import { toast } from "sonner";
-import { DashboardLayout } from "../../components/layout/DashboardLayout.tsx";
+import React, {useEffect, useState} from 'react';
+import {format} from 'date-fns';
+import type {CreateOutflowRequest, ResponseShortOutflow} from "../../models/outflow.model.ts";
+import {ExpenseType, PaymentMethod} from "../../models/enums.ts";
+import {outflowService} from "../../services/outflow.service.ts";
+import {expenseService} from "../../services/expense.service.ts";
+import {toast} from "sonner";
+import {DashboardLayout} from "../../components/layout/DashboardLayout.tsx";
 import {
     Dialog,
     DialogContent,
@@ -16,21 +16,34 @@ import {
     DialogTitle,
     DialogTrigger
 } from "../../components/ui/dialog.tsx";
-import { Button } from "../../components/ui/button.tsx";
-import { Plus, Filter, X, Calendar, Receipt, ChevronDown, ChevronUp, CreditCard, DollarSign, TrendingDown } from "lucide-react";
-import { Label } from "@radix-ui/react-label";
-import { Input } from "../../components/ui/input.tsx";
-import { EnumSelect } from "../../components/ui/enum-select.tsx";
+import {Button} from "../../components/ui/button.tsx";
 import {
-    PaymentMethodLabels,
-    ExpenseTypeLabels
-} from "../../models/enum-labels.ts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select.tsx";
-import { Card, CardContent } from "../../components/ui/card.tsx";
-import { Badge } from "../../components/ui/badge.tsx";
-import { Skeleton } from "../../components/ui/skeleton.tsx";
-import type { ResponseExpenseJson } from "../../models/expense.model.ts";
-import { ExpenseType } from "../../models/enums.ts";
+    Calendar,
+    CalendarClock,
+    CalendarHeart,
+    ChevronDown,
+    ChevronUp,
+    CreditCard,
+    Divide,
+    DollarSign,
+    FileText,
+    Filter,
+    Plus,
+    Receipt,
+    TrendingUp,
+    X
+} from "lucide-react";
+import {Label} from "@radix-ui/react-label";
+import {Input} from "../../components/ui/input.tsx";
+import {EnumSelect} from "../../components/ui/enum-select.tsx";
+import {ExpenseTypeLabels, PaymentMethodLabels} from "../../models/enum-labels.ts";
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../components/ui/select.tsx";
+import {Card, CardContent} from "../../components/ui/card.tsx";
+import {Badge} from "../../components/ui/badge.tsx";
+import {Skeleton} from "../../components/ui/skeleton.tsx";
+import type {ResponseExpenseJson} from "../../models/expense.model.ts";
+import {MoneyInput} from "../../components/ui/money-input.tsx";
+import { ptBR } from "date-fns/locale";
 
 export default function Outflows() {
     const [outflows, setOutflows] = useState<ResponseShortOutflow[]>([]);
@@ -49,11 +62,12 @@ export default function Outflows() {
         { value: '1000+', label: 'Acima de R$ 1.000' }
     ];
 
-    // Filtros atualizados com presets
+    // Filtros atualizados com tipo de despesa
     const [filters, setFilters] = useState({
         month: new Date().getMonth(),
         year: new Date().getFullYear(),
         expenseId: 'all',
+        expenseType: 'all' as string | ExpenseType,
         amountRange: 'all',
     });
 
@@ -117,6 +131,7 @@ export default function Outflows() {
             const response = await outflowService.getOutflows({
                 ...dateRange,
                 ExpenseId: filters.expenseId === 'all' ? undefined : filters.expenseId,
+                ExpenseType: filters.expenseType === 'all' ? undefined : filters.expenseType as ExpenseType,
                 AmountMin: filters.amountRange === 'all' ? undefined : amountMin,
                 AmountMax: filters.amountRange === 'all' ? undefined : amountMax,
             });
@@ -140,6 +155,7 @@ export default function Outflows() {
             month: new Date().getMonth(),
             year: new Date().getFullYear(),
             expenseId: 'all',
+            expenseType: 'all',
             amountRange: 'all',
         });
         toast.info("Filtros limpos");
@@ -147,6 +163,7 @@ export default function Outflows() {
 
     const hasActiveFilters = () => {
         return filters.expenseId !== 'all' ||
+            filters.expenseType !== 'all' ||
             filters.amountRange !== 'all';
     };
 
@@ -176,29 +193,29 @@ export default function Outflows() {
     const isParcelada =
         selectedExpense?.expenseType === ExpenseType.PARCELADA;
 
-    const getExpenseIcon = (expenseType?: ExpenseType) => {
-        switch(expenseType) {
+    const getExpenseBadgeColor = (type: ExpenseType) => {
+        switch(type) {
             case ExpenseType.PARCELADA:
-                return <CreditCard className="w-4 h-4 text-red-500" />;
+                return 'bg-blue-100 text-blue-600 border-blue-200';
             case ExpenseType.FIXA:
-                return <DollarSign className="w-4 h-4 text-red-600" />;
+                return 'bg-green-50 text-green-700 border-green-100';
             case ExpenseType.VARIAVEL:
-                return <TrendingDown className="w-4 h-4 text-red-400" />;
+                return 'bg-amber-200 text-amber-900 border-amber-300';
             default:
-                return <Receipt className="w-4 h-4 text-gray-500" />;
+                return 'bg-gray-100 text-gray-800';
         }
     };
 
-    const getExpenseColor = (expenseType?: ExpenseType) => {
-        switch(expenseType) {
+    const getExpenseIcon = (type: ExpenseType) => {
+        switch(type) {
             case ExpenseType.PARCELADA:
-                return 'bg-red-100 text-red-800 border-red-200';
+                return <CreditCard className="w-5 h-5 text-blue-600" />;
             case ExpenseType.FIXA:
-                return 'bg-red-50 text-red-700 border-red-100';
+                return <DollarSign className="w-5 h-5 text-green-500" />;
             case ExpenseType.VARIAVEL:
-                return 'bg-red-200 text-red-900 border-red-300';
+                return <TrendingUp className="w-5 h-5 text-amber-400" />;
             default:
-                return 'bg-gray-100 text-gray-800';
+                return <Receipt className="w-5 h-5 text-gray-500" />;
         }
     };
 
@@ -211,6 +228,20 @@ export default function Outflows() {
             default:
                 return <DollarSign className="w-4 h-4 text-gray-500" />;
         }
+    };
+
+    const isTodayDate = (date: Date): boolean => {
+        const today = new Date();
+        return date.getDate() === today.getDate() &&
+            date.getMonth() === today.getMonth() &&
+            date.getFullYear() === today.getFullYear();
+    };
+
+    const isRecentDate = (date: Date, days: number): boolean => {
+        const today = new Date();
+        const diffTime = Math.abs(today.getTime() - date.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays <= days;
     };
 
     /* ===================== CREATE ===================== */
@@ -304,8 +335,6 @@ export default function Outflows() {
                                             />
                                         </div>
 
-
-
                                         <div className="space-y-2">
                                             <Label className="text-gray-700">Método de Pagamento</Label>
                                             <EnumSelect
@@ -348,21 +377,21 @@ export default function Outflows() {
                                         <div className="space-y-2">
                                             <Label className="text-gray-700">Valor</Label>
 
-                                            <Input
-                                                type="number"
-                                                step="0.01"
+                                            <MoneyInput
                                                 value={
                                                     isParcelada
-                                                        ? selectedExpense?.amountOfEachInstallment ?? 0
+                                                        ? String(selectedExpense?.amountOfEachInstallment ?? 0)
                                                         : formData.amount
+                                                            ? String(formData.amount)
+                                                            : ""
                                                 }
                                                 disabled={isParcelada}
-                                                onChange={(e) => {
+                                                onChange={(value) => {
                                                     if (isParcelada) return;
 
                                                     setFormData({
                                                         ...formData,
-                                                        amount: Number(e.target.value),
+                                                        amount: Number(value),
                                                     });
                                                 }}
                                                 required={!isParcelada}
@@ -372,7 +401,7 @@ export default function Outflows() {
                                             {isParcelada && (
                                                 <p className="text-sm text-gray-500">
                                                     Esta é uma despesa parcelada. Para alterar o valor da parcela,
-                                                    edite a despesa em{' '}
+                                                    edite a despesa em{" "}
                                                     <a
                                                         href="/expenses"
                                                         className="text-blue-600 hover:underline font-medium"
@@ -383,6 +412,7 @@ export default function Outflows() {
                                             )}
                                         </div>
                                     )}
+
 
                                     <div className="space-y-2">
                                         <Label className="text-gray-700">Descrição (Opcional)</Label>
@@ -437,39 +467,20 @@ export default function Outflows() {
                 {/* FILTROS - Responsive */}
                 <div className={`${showFilters ? 'block' : 'hidden'}`}>
                     <Card className="bg-white border border-gray-200">
-                        <CardContent className="pt-6">
-                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <CardContent className="p-4 md:p-5">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4 mb-4">
                                 <div className="flex items-center gap-2">
                                     <Filter className="w-4 h-4 text-gray-500" />
-                                    <h3 className="font-medium text-gray-900">Filtros</h3>
+                                    <h3 className="font-medium text-gray-900 text-sm md:text-base">Filtros</h3>
                                 </div>
 
                                 <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => setShowFilters(!showFilters)}
-                                        className="md:hidden text-gray-600 hover:text-gray-900"
-                                    >
-                                        {showFilters ? (
-                                            <>
-                                                <ChevronUp className="w-3 h-3 mr-1" />
-                                                Ocultar
-                                            </>
-                                        ) : (
-                                            <>
-                                                <ChevronDown className="w-3 h-3 mr-1" />
-                                                Mostrar
-                                            </>
-                                        )}
-                                    </Button>
-
                                     {hasActiveFilters() && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={handleClearFilters}
-                                            className="text-gray-600 hover:text-gray-900"
+                                            className="text-gray-600 hover:text-gray-900 text-xs"
                                         >
                                             <X className="w-3 h-3 mr-1" />
                                             Limpar filtros
@@ -479,32 +490,37 @@ export default function Outflows() {
                             </div>
 
                             {hasActiveFilters() && (
-                                <div className="flex flex-wrap gap-2 mb-4">
+                                <div className="flex flex-wrap gap-2 mb-3 md:mb-4">
                                     {filters.expenseId !== 'all' && (
-                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
                                             <Receipt className="w-3 h-3 mr-1" />
                                             {getSelectedExpenseName()}
                                         </Badge>
                                     )}
+                                    {filters.expenseType !== 'all' && (
+                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
+                                            Tipo: {ExpenseTypeLabels[filters.expenseType as ExpenseType]}
+                                        </Badge>
+                                    )}
                                     {filters.amountRange !== 'all' && (
-                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                                        <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
                                             Valor: {getAmountRangeLabel()}
                                         </Badge>
                                     )}
                                 </div>
                             )}
 
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
                                 {/* MÊS */}
-                                <div className="space-y-2">
-                                    <Label className="text-sm text-gray-700">Mês</Label>
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <Label className="text-xs md:text-sm text-gray-700">Mês</Label>
                                     <Select
                                         value={filters.month.toString()}
                                         onValueChange={(value) =>
                                             setFilters({ ...filters, month: Number(value) })
                                         }
                                     >
-                                        <SelectTrigger className="w-full border-gray-300">
+                                        <SelectTrigger className="w-full border-gray-300 text-sm">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -512,7 +528,7 @@ export default function Outflows() {
                                                 'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                                                 'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
                                             ].map((month, index) => (
-                                                <SelectItem key={index} value={index.toString()}>
+                                                <SelectItem key={index} value={index.toString()} className="text-sm">
                                                     {month}
                                                 </SelectItem>
                                             ))}
@@ -521,20 +537,20 @@ export default function Outflows() {
                                 </div>
 
                                 {/* ANO */}
-                                <div className="space-y-2">
-                                    <Label className="text-sm text-gray-700">Ano</Label>
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <Label className="text-xs md:text-sm text-gray-700">Ano</Label>
                                     <Select
                                         value={filters.year.toString()}
                                         onValueChange={(value) =>
                                             setFilters({ ...filters, year: Number(value) })
                                         }
                                     >
-                                        <SelectTrigger className="w-full border-gray-300">
+                                        <SelectTrigger className="w-full border-gray-300 text-sm">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[2023, 2024, 2025, 2026].map((year) => (
-                                                <SelectItem key={year} value={year.toString()}>
+                                                <SelectItem key={year} value={year.toString()} className="text-sm">
                                                     {year}
                                                 </SelectItem>
                                             ))}
@@ -543,23 +559,25 @@ export default function Outflows() {
                                 </div>
 
                                 {/* DESPESA */}
-                                <div className="space-y-2">
-                                    <Label className="text-sm text-gray-700">Despesa</Label>
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <Label className="text-xs md:text-sm text-gray-700">Despesa</Label>
                                     <Select
                                         value={filters.expenseId}
                                         onValueChange={(value) =>
                                             setFilters({ ...filters, expenseId: value })
                                         }
                                     >
-                                        <SelectTrigger className="w-full border-gray-300">
+                                        <SelectTrigger className="w-full border-gray-300 text-sm">
                                             <SelectValue>
-                                                {filters.expenseId === 'all' ? 'Todas as despesas' : getSelectedExpenseName()}
+                                                <span className="truncate">
+                                                    {filters.expenseId === 'all' ? 'Todas as despesas' : getSelectedExpenseName()}
+                                                </span>
                                             </SelectValue>
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="all">Todas as despesas</SelectItem>
+                                            <SelectItem value="all" className="text-sm">Todas as despesas</SelectItem>
                                             {expenses.map((expense) => (
-                                                <SelectItem key={expense.id} value={expense.id}>
+                                                <SelectItem key={expense.id} value={expense.id} className="text-sm">
                                                     {expense.name}
                                                 </SelectItem>
                                             ))}
@@ -567,21 +585,34 @@ export default function Outflows() {
                                     </Select>
                                 </div>
 
+                                {/* TIPO DE DESPESA */}
+                                <div className="space-y-1.5 md:space-y-2">
+                                    <Label className="text-xs md:text-sm text-gray-700">Tipo de Despesa</Label>
+                                    <EnumSelect
+                                        value={Number(filters.expenseType)}
+                                        labels={ExpenseTypeLabels}
+                                        onChange={(value) =>
+                                            setFilters({...filters, expenseType: value})
+                                        }
+                                        placeholder="Selecione o tipo"
+                                    />
+                                </div>
+
                                 {/* PRESET DE VALOR */}
-                                <div className="space-y-2">
-                                    <Label className="text-sm text-gray-700">Faixa de Valor</Label>
+                                <div className="space-y-1.5 md:space-y-2 sm:col-span-2 lg:col-span-2">
+                                    <Label className="text-xs md:text-sm text-gray-700">Faixa de Valor</Label>
                                     <Select
                                         value={filters.amountRange}
                                         onValueChange={(value) =>
                                             setFilters({ ...filters, amountRange: value })
                                         }
                                     >
-                                        <SelectTrigger className="w-full border-gray-300">
+                                        <SelectTrigger className="w-full border-gray-300 text-sm">
                                             <SelectValue />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {amountPresets.map((preset) => (
-                                                <SelectItem key={preset.value} value={preset.value}>
+                                                <SelectItem key={preset.value} value={preset.value} className="text-sm">
                                                     {preset.label}
                                                 </SelectItem>
                                             ))}
@@ -595,82 +626,188 @@ export default function Outflows() {
 
                 {/* LISTA DE SAÍDAS */}
                 <Card className="bg-white border border-gray-200">
-                    <CardContent className="pt-6">
+                    <CardContent className="p-4 md:p-5">
                         {loading ? (
                             <div className="space-y-4">
                                 {[1, 2, 3].map(i => (
-                                    <Skeleton key={i} className="h-24 w-full rounded-lg" />
+                                    <Skeleton key={i} className="h-32 w-full rounded-lg" />
                                 ))}
                             </div>
                         ) : outflows.length === 0 ? (
-                            <div className="text-center py-12">
-                                <div className="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                                    <Calendar className="w-8 h-8 text-gray-400" />
+                            <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-6"
+                                 data-testid="empty-outflows-state">
+                                <div className="mb-6">
+                                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
+                                        <Calendar className="w-10 h-10 text-red-400" />
+                                    </div>
                                 </div>
-                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                                     Nenhuma saída encontrada
                                 </h3>
-                                <p className="text-gray-600 mb-4">
+                                <p className="text-gray-600 max-w-md mb-6">
                                     {hasActiveFilters()
-                                        ? "Tente ajustar os filtros ou limpar para ver todas as saídas"
+                                        ? "Tente ajustar os filtros para encontrar saídas registradas"
                                         : `Não há saídas registradas para ${getMonthName(filters.month)} ${filters.year}`}
                                 </p>
                                 {hasActiveFilters() && (
                                     <Button
                                         variant="outline"
                                         onClick={handleClearFilters}
-                                        className="mt-2"
+                                        className="gap-2 border-gray-300 hover:border-gray-400"
                                     >
-                                        <X className="w-4 h-4 mr-2" />
+                                        <X className="w-4 h-4" />
                                         Limpar filtros
                                     </Button>
                                 )}
                             </div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {outflows.map((outflow) => {
-                                    const expense = expenses.find(e => e.id === outflow.id);
-                                    return (
-                                        <Card key={outflow.id} className="bg-white border-l-4 border-l-red-500 hover:shadow-md transition-shadow">
-                                            <CardContent className="p-4">
-                                                <div className="flex justify-between items-start mb-3">
-                                                    <div>
-                                                        <div className="font-medium text-lg text-gray-900">
-                                                            {format(new Date(outflow.date), 'dd/MM/yyyy')}
-                                                        </div>
-                                                        <div className="text-sm text-gray-600 mt-1">
-                                                            {outflow.expenseName || '—'}
-                                                        </div>
-                                                    </div>
-                                                    <div className="flex flex-col items-end gap-2">
-                                                        <Badge variant="outline" className={`${getExpenseColor(expense?.expenseType)} flex items-center gap-1`}>
-                                                            {getExpenseIcon(expense?.expenseType)}
-                                                            {expense?.expenseType ? ExpenseTypeLabels[expense.expenseType] : 'Despesa'}
-                                                        </Badge>
-                                                        <div className="flex items-center gap-1 text-sm text-gray-500">
-                                                            {getPaymentMethodIcon(outflow.paymentMethod)}
-                                                            {PaymentMethodLabels[outflow.paymentMethod]}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                    const formattedDate = new Date(outflow.date);
+                                    const isToday = isTodayDate(formattedDate);
+                                    const isRecent = isRecentDate(formattedDate, 7);
+                                    const isInstallment = outflow.currentInstallment && outflow.totalInstallments;
+                                    const remainingInstallments = isInstallment
+                                        ? outflow.totalInstallments! - outflow.currentInstallment!
+                                        : 0;
+                                    const expenseType = outflow.expenseType;
 
-                                                <div className="space-y-2 mb-4">
-                                                    {outflow.currentInstallment && (
-                                                        <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                                                            <span className="text-sm text-gray-600">Parcela</span>
-                                                            <span className="font-medium text-gray-900">
-                                                                {outflow.currentInstallment}/{outflow.totalInstallments}
-                                                            </span>
+                                    return (
+                                        <Card
+                                            key={outflow.id}
+                                            className="bg-white border-l-4 border-l-red-500 hover:shadow-lg transition-all duration-200 overflow-hidden h-full flex flex-col group hover:-translate-y-1"
+                                        >
+                                            <CardContent className="p-4 md:p-5 flex flex-col flex-1">
+                                                {/* Cabeçalho - Data e Tipo */}
+                                                <div className="flex justify-between items-start mb-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`p-2 rounded-lg ${isToday ? 'bg-red-100' : 'bg-gray-100'}`}>
+                                                            {isToday ? (
+                                                                <CalendarHeart className="w-5 h-5 text-red-600" />
+                                                            ) : isRecent ? (
+                                                                <CalendarClock className="w-5 h-5 text-orange-600" />
+                                                            ) : (
+                                                                <Calendar className="w-5 h-5 text-gray-600" />
+                                                            )}
                                                         </div>
+                                                        <div>
+                                                            <div className="font-semibold text-gray-900 text-base md:text-lg">
+                                                                {format(formattedDate, 'dd/MM/yyyy')}
+                                                            </div>
+                                                            <div className="text-xs md:text-sm text-gray-500">
+                                                                {format(formattedDate, 'EEEE', { locale: ptBR })}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* Tipo de Despesa usando as funções - AGORA DIRETO DO outflow.expenseType */}
+                                                    {typeof expenseType === 'number' && (
+                                                        <Badge variant="outline" className={getExpenseBadgeColor(expenseType)}>
+                                                            <div className="flex items-center gap-1.5">
+                                                                {getExpenseIcon(expenseType)}
+                                                                <span className="font-medium text-xs md:text-sm">
+                                                                    {ExpenseTypeLabels[expenseType]}
+                                                                </span>
+                                                            </div>
+                                                        </Badge>
                                                     )}
                                                 </div>
 
-                                                <div className="pt-3 border-t border-gray-200">
+                                                {/* Informações da Despesa */}
+                                                <div className="space-y-3 mb-4 flex-1">
+                                                    {/* Nome da Despesa e Descrição */}
+                                                    <div className="bg-gray-50 rounded-lg p-3">
+                                                        <div className="flex items-start gap-2 mb-2">
+                                                            <Receipt className="w-5 h-5 text-red-500 flex-shrink-0" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <h3 className="font-medium text-gray-900 text-base truncate">
+                                                                    {outflow.expenseName}
+                                                                </h3>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* DESCRIÇÃO AGORA VEM DIRETO DO outflow.description */}
+                                                        {outflow.description && outflow.description.trim() !== '' && (
+                                                            <div className="mt-2 pl-7">
+                                                                <div className="flex items-start gap-2">
+                                                                    <FileText className="w-4 h-4 text-gray-400 mt-0.5 flex-shrink-0" />
+                                                                    <p className="text-sm text-gray-600 line-clamp-2">
+                                                                        {outflow.description}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+
+                                                    {/* Método de Pagamento e Detalhes */}
+                                                    <div className="grid grid-cols-2 gap-3">
+                                                        {/* Método de Pagamento */}
+                                                        <div className="bg-blue-50 rounded-lg p-3">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <CreditCard className="w-4 h-4 text-blue-500" />
+                                                                <span className="text-xs font-medium text-blue-700">Pagamento</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-2">
+                                                                {getPaymentMethodIcon(outflow.paymentMethod)}
+                                                                <span className="text-sm font-medium text-gray-900 truncate">
+                                                                    {PaymentMethodLabels[outflow.paymentMethod]}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Parcelamento ou Status */}
+                                                        {isInstallment ? (
+                                                            <div className="bg-purple-50 rounded-lg p-3">
+                                                                <div className="flex items-center justify-between mb-2">
+                                                                    <div className="flex items-center gap-2">
+                                                                        <Divide className="w-4 h-4 text-purple-500" />
+                                                                        <span className="text-xs font-medium text-purple-700">Parcela</span>
+                                                                    </div>
+                                                                    <span className="text-sm font-bold text-gray-900">
+                                                                        {outflow.currentInstallment}/{outflow.totalInstallments}
+                                                                    </span>
+                                                                </div>
+                                                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                                                    <div
+                                                                        className="bg-purple-500 h-2 rounded-full transition-all duration-500"
+                                                                        style={{ width: `${(outflow.currentInstallment! / outflow.totalInstallments!) * 100}%` }}
+                                                                    />
+                                                                </div>
+                                                                <div className="flex justify-between text-xs text-gray-600 mt-1">
+                                                                    <span>{remainingInstallments} restante{remainingInstallments !== 1 ? 's' : ''}</span>
+                                                                    <span>{Math.round((outflow.currentInstallment! / outflow.totalInstallments!) * 100)}% pago</span>
+                                                                </div>
+                                                            </div>
+                                                        ) : (
+                                                            <div className="bg-green-50 rounded-lg p-3">
+                                                                <div className="flex items-center gap-2">
+                                                                    <DollarSign className="w-4 h-4 text-green-500" />
+                                                                    <div>
+                                                                        <div className="text-xs font-medium text-green-700">Status</div>
+                                                                        <div className="text-sm font-medium text-gray-900">À vista</div>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Valor */}
+                                                <div className="pt-4 border-t border-gray-200">
                                                     <div className="flex items-center justify-between">
-                                                        <span className="font-medium text-gray-900">Valor</span>
-                                                        <span className="font-mono font-bold text-lg text-red-600">
-                                                            R$ {outflow.amount.toFixed(2)}
-                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-sm md:text-base font-semibold text-gray-900">Valor</span>
+                                                            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse hidden md:block"></div>
+                                                        </div>
+                                                        <div className="flex items-baseline gap-1">
+                                                            <span className="text-xs md:text-sm text-red-500">R$</span>
+                                                            <span className="text-lg md:text-xl font-bold text-red-600">
+                                                                {outflow.amount.toLocaleString('pt-BR', {
+                                                                    minimumFractionDigits: 2,
+                                                                    maximumFractionDigits: 2
+                                                                })}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </CardContent>

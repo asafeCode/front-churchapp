@@ -18,8 +18,7 @@ export interface CreateInflowResponse {
 // Cada inflow retornado pelo backend
 export interface ResponseInflowJson {
   id: string;
-  worshipId?: string;
-  memberId?: string;
+  description: string;
   date: string; // ISO
   inflowType: InflowType;
   memberName: string;

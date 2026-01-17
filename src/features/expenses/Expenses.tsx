@@ -29,6 +29,8 @@ import {Card, CardContent} from '../../components/ui/card.tsx';
 import {Badge} from '../../components/ui/badge.tsx';
 import {Skeleton} from '../../components/ui/skeleton.tsx';
 import type {ExpenseFormData, ResponseExpenseJson, ResponseExpensesJson} from '../../models/expense.model.ts';
+import {MoneyInput} from "../../components/ui/money-input.tsx";
+import {NumberInput} from "../../components/ui/number-input.tsx";
 
 export default function Expenses() {
     const [expenses, setExpenses] = useState<ResponseExpensesJson>({expenses: []});
@@ -498,7 +500,7 @@ export default function Expenses() {
                                         setFormData({
                                             ...formData,
                                             type,
-                                            totalInstallments: type === ExpenseType.PARCELADA ? 1 : 0,
+                                            totalInstallments: type === ExpenseType.PARCELADA ? 0 : 0,
                                         });
                                     }}
                                     placeholder="Selecione o tipo"
@@ -506,64 +508,70 @@ export default function Expenses() {
                             </div>
 
                             {formData.type === ExpenseType.PARCELADA && (
-                                <div className="space-y-2">
-                                    <Label className="text-gray-700">Total de Parcelas</Label>
-                                    <Input
-                                        type="number"
-                                        min={2}
-                                        value={formData.totalInstallments ?? 1}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                totalInstallments: Number(e.target.value)
-                                            })
-                                        }
-                                        required
-                                        className="border-gray-300"
-                                    />
-                                    <Label className="text-gray-700">Parcela Atual</Label>
-                                    <Input
-                                        type="number"
-                                        min={0}
-                                        value={formData.currentInstallment ?? 0}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                currentInstallment: Number(e.target.value)
-                                            })
-                                        }
-                                        required
-                                        className="border-gray-300"
-                                    />
-                                    <Label className="text-gray-700">Valor da Parcela</Label>
-                                    <Input
-                                        type="number"
-                                        step="0.01"
-                                        min={2}
-                                        value={formData.amountOfEachInstallment ?? 1}
-                                        onChange={(e) =>
-                                            setFormData({
-                                                ...formData,
-                                                amountOfEachInstallment: Number(e.target.value)
-                                            })
-                                        }
-                                        required
-                                        className="border-gray-300"
-                                    />
+                                <div className="space-y-4">
+                                    <div className="space-y-2">
+                                        <Label className="text-gray-700">Total de Parcelas</Label>
+                                        <NumberInput
+                                            placeholder="Ex: Parcelada em 12x"
+                                            value={
+                                                formData.totalInstallments
+                                                    ? String(formData.totalInstallments)
+                                                    : ""
+                                            }
+                                            onChange={(value) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    totalInstallments: Number(value),
+                                                })
+                                            }
+                                            required
+                                            className="border-gray-300"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-gray-700">Parcela Atual</Label>
+                                        <NumberInput
+                                            placeholder="Ex: 2 de 12 Parcelas"
+                                            value={
+                                                formData.currentInstallment
+                                                    ? String(formData.currentInstallment)
+                                                    : ""
+                                            }
+                                            onChange={(value) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    currentInstallment: Number(value),
+                                                })
+                                            }
+                                            required
+                                            className="border-gray-300"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-gray-700">Valor da Parcela</Label>
+                                        <MoneyInput
+                                            value={
+                                                formData.amountOfEachInstallment
+                                                    ? String(formData.amountOfEachInstallment)
+                                                    : ""
+                                            }
+                                            onChange={(value) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    amountOfEachInstallment: Number(value),
+                                                })
+                                            }
+                                            placeholder="R$ 0,00"
+                                            className="border-gray-300"
+                                        />
+                                    </div>
                                 </div>
-
-
                             )}
 
+
                             <div className="flex gap-3 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => setOpenCreate(false)}
-                                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
-                                >
-                                    Cancelar
-                                </Button>
                                 <Button
                                     type="submit"
                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"
@@ -637,17 +645,6 @@ export default function Expenses() {
                             )}
 
                             <div className="flex gap-3 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onClick={() => {
-                                        setOpenEdit(false);
-                                        setEditingExpense(null);
-                                    }}
-                                    className="flex-1 border-gray-300 text-gray-700 hover:bg-gray-50"
-                                >
-                                    Cancelar
-                                </Button>
                                 <Button
                                     type="submit"
                                     className="flex-1 bg-green-600 hover:bg-green-700 text-white"

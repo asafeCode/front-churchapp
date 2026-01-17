@@ -1,4 +1,4 @@
-import { PaymentMethod } from './enums';
+import {ExpenseType, PaymentMethod} from './enums';
 
 // -------------------------
 // REQUEST
@@ -22,7 +22,9 @@ export interface CreateOutflowFormData {
 // -------------------------
 export interface ResponseShortOutflow {
   id: string;
+  description: string;
   expenseName: string;
+  expenseType: ExpenseType;
   date: string; // ISO date string
   amount: number;
   paymentMethod: PaymentMethod; // ✅ enum
@@ -48,7 +50,7 @@ export interface OutflowFilters {
   AmountMin?: number;
   AmountMax?: number;
   Description?: string;
-  ExpenseType?: number;
+  ExpenseType?: ExpenseType;
   ExpenseId?: string;
   CreatedByUserId?: string;
 }
