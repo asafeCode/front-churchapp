@@ -1,8 +1,8 @@
-import {useState, useEffect} from 'react';
-import {DashboardLayout} from '../../components/layout/DashboardLayout';
-import {Button} from '../../components/ui/button';
-import {Input} from '../../components/ui/input';
-import {Label} from '../../components/ui/label';
+import { useState, useEffect } from 'react';
+import { DashboardLayout } from '../../components/layout/DashboardLayout';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
 import {
     Dialog,
     DialogContent,
@@ -11,14 +11,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '../../components/ui/dialog';
-import {Card, CardContent} from '../../components/ui/card';
-import {Plus, Church, Loader2, Calendar, Clock, FileText} from 'lucide-react';
-import {worshipService} from '../../services/worship.service';
-import {toast} from 'sonner';
-import {DayOfWeek} from '../../models/enums';
-import {DayOfWeekLabels} from '../../models/enum-labels';
-import type {CreateWorshipRequest, ResponseWorship} from '../../models/worship.model';
-import {EnumSelect} from '../../components/ui/enum-select';
+import { Card, CardContent } from '../../components/ui/card';
+import { Plus, Church, Loader2, Calendar, Clock, FileText } from 'lucide-react';
+import { worshipService } from '../../services/worship.service';
+import { toast } from 'sonner';
+import { DayOfWeek } from '../../models/enums';
+import { DayOfWeekLabels } from '../../models/enum-labels';
+import type { CreateWorshipRequest, ResponseWorship } from '../../models/worship.model';
+import { EnumSelect } from '../../components/ui/enum-select';
 
 export default function Worships() {
     const [worships, setWorships] = useState<ResponseWorship[]>([]);
@@ -50,7 +50,7 @@ export default function Worships() {
         e.preventDefault();
         await worshipService.createWorship(formData);
         toast.success('Culto criado com sucesso');
-        setFormData({dayOfWeek: DayOfWeek.DOMINGO, time: '', description: ''});
+        setFormData({ dayOfWeek: DayOfWeek.DOMINGO, time: '', description: '' });
         setShowDialog(false);
         const response = await worshipService.getWorships();
         setWorships(response.worships ?? []);
@@ -71,7 +71,7 @@ export default function Worships() {
                     <Dialog open={showDialog} onOpenChange={setShowDialog}>
                         <DialogTrigger asChild>
                             <Button data-testid="create-worship-button">
-                                <Plus className="w-4 h-4 mr-2"/> Criar Culto
+                                <Plus className="w-4 h-4 mr-2" /> Criar Culto
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="max-w-md">
@@ -84,7 +84,7 @@ export default function Worships() {
                                     <Label>Dia da Semana</Label>
                                     <EnumSelect
                                         value={formData.dayOfWeek}
-                                        onChange={(dayOfWeek) => setFormData({...formData, dayOfWeek})}
+                                        onChange={(dayOfWeek) => setFormData({ ...formData, dayOfWeek })}
                                         labels={DayOfWeekLabels}
                                         testId="worship-day-select"
                                     />
@@ -95,7 +95,7 @@ export default function Worships() {
                                     <Input
                                         type="time"
                                         value={formData.time}
-                                        onChange={(e) => setFormData({...formData, time: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                                         required
                                         data-testid="worship-time-input"
                                     />
@@ -107,7 +107,7 @@ export default function Worships() {
                                         type="text"
                                         placeholder="Ex: Culto de Celebração"
                                         value={formData.description}
-                                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                         data-testid="worship-description-input"
                                     />
                                 </div>

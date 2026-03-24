@@ -1,12 +1,12 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {ExpenseType} from '../../models/enums.ts';
-import {expenseService} from '../../services/expense.service.ts';
-import {toast} from 'sonner';
-import {DashboardLayout} from '../../components/layout/DashboardLayout.tsx';
-import {Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,} from '../../components/ui/dialog.tsx';
-import {Button} from '../../components/ui/button.tsx';
+import React, { useEffect, useState } from 'react';
+import { ExpenseType } from '../../models/enums.ts';
+import { expenseService } from '../../services/expense.service.ts';
+import { toast } from 'sonner';
+import { DashboardLayout } from '../../components/layout/DashboardLayout.tsx';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, } from '../../components/ui/dialog.tsx';
+import { Button } from '../../components/ui/button.tsx';
 import {
     CheckCircle,
     ChevronDown,
@@ -21,24 +21,24 @@ import {
     TrendingUp,
     X
 } from 'lucide-react';
-import {Label} from '@radix-ui/react-label';
-import {Input} from '../../components/ui/input.tsx';
-import {EnumSelect} from '../../components/ui/enum-select.tsx';
-import {ExpenseTypeLabels} from '../../models/enum-labels.ts';
-import {Card, CardContent} from '../../components/ui/card.tsx';
-import {Badge} from '../../components/ui/badge.tsx';
-import {Skeleton} from '../../components/ui/skeleton.tsx';
-import type {ExpenseFormData, ResponseExpenseJson, ResponseExpensesJson} from '../../models/expense.model.ts';
-import {MoneyInput} from "../../components/ui/money-input.tsx";
-import {NumberInput} from "../../components/ui/number-input.tsx";
+import { Label } from '@radix-ui/react-label';
+import { Input } from '../../components/ui/input.tsx';
+import { EnumSelect } from '../../components/ui/enum-select.tsx';
+import { ExpenseTypeLabels } from '../../models/enum-labels.ts';
+import { Card, CardContent } from '../../components/ui/card.tsx';
+import { Badge } from '../../components/ui/badge.tsx';
+import { Skeleton } from '../../components/ui/skeleton.tsx';
+import type { ExpenseFormData, ResponseExpenseJson, ResponseExpensesJson } from '../../models/expense.model.ts';
+import { MoneyInput } from "../../components/ui/money-input.tsx";
+import { NumberInput } from "../../components/ui/number-input.tsx";
 
 export default function Expenses() {
-    const [expenses, setExpenses] = useState<ResponseExpensesJson>({expenses: []});
+    const [expenses, setExpenses] = useState<ResponseExpensesJson>({ expenses: [] });
     const [loading, setLoading] = useState(true);
     const [openCreate, setOpenCreate] = useState(false);
-    const [filterType, setFilterType] = useState<ExpenseType | string>('all');
+    const [filterType, setFilterType] = useState<ExpenseType | undefined>(undefined);
     const [searchTerm, setSearchTerm] = useState('');
-    const [editingExpense, setEditingExpense] = useState<ResponseExpenseJson | null> (null);
+    const [editingExpense, setEditingExpense] = useState<ResponseExpenseJson | null>(null);
     const [openEdit, setOpenEdit] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
 
@@ -113,13 +113,12 @@ export default function Expenses() {
 
     /* ===================== FILTERS ===================== */
     const filteredExpenses = expenses.expenses.filter(expense => {
-        const matchesType = filterType === 'all' || expense.expenseType === Number(filterType);
+        const matchesType = filterType === undefined || expense.expenseType === filterType;
         const matchesSearch = expense.name.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesType && matchesSearch;
     });
-
     const getExpenseColor = (type: ExpenseType) => {
-        switch(type) {
+        switch (type) {
             case ExpenseType.PARCELADA:
                 return 'bg-white border-l-blue-600 border-l-4';
             case ExpenseType.FIXA:
@@ -132,7 +131,7 @@ export default function Expenses() {
     };
 
     const getExpenseBadgeColor = (type: ExpenseType) => {
-        switch(type) {
+        switch (type) {
             case ExpenseType.PARCELADA:
                 return 'bg-blue-100 text-blue-600 border-blue-200';
             case ExpenseType.FIXA:
@@ -145,7 +144,7 @@ export default function Expenses() {
     };
 
     const getExpenseIcon = (type: ExpenseType) => {
-        switch(type) {
+        switch (type) {
             case ExpenseType.PARCELADA:
                 return <CreditCard className="w-5 h-5 text-blue-600" />;
             case ExpenseType.FIXA:
@@ -163,18 +162,18 @@ export default function Expenses() {
             name: expense.name,
             type: expense.expenseType,
             totalInstallments: expense.expenseType === ExpenseType.PARCELADA ? expense.totalInstallments ?? 1 : null,
-            currentInstallment:  1,
+            currentInstallment: 1,
             amountOfEachInstallment: 1
         });
         setOpenEdit(true);
     };
 
     const handleClearFilters = () => {
-        setFilterType('all');
+        setFilterType(undefined);
         setSearchTerm('');
     };
 
-    const hasFilters = filterType !== 'all' || searchTerm.trim() !== '';
+    const hasFilters = filterType !== undefined || searchTerm.trim() !== '';
 
     /* ===================== RENDER ===================== */
     return (
@@ -211,7 +210,7 @@ export default function Expenses() {
                             onClick={() => setOpenCreate(true)}
                             className="bg-green-600 hover:bg-green-700 text-white"
                         >
-                            <Plus className="w-4 h-4 mr-2"/>
+                            <Plus className="w-4 h-4 mr-2" />
                             <span className="hidden sm:inline">Nova Despesa</span>
                             <span className="sm:hidden">Nova</span>
                         </Button>
@@ -331,7 +330,7 @@ export default function Expenses() {
                                         Tipo de despesa
                                     </Label>
                                     <EnumSelect
-                                        value={Number(filterType) as ExpenseType}
+                                        value={filterType}
                                         labels={{
                                             [ExpenseType.FIXA]: ExpenseTypeLabels[ExpenseType.FIXA],
                                             [ExpenseType.PARCELADA]: ExpenseTypeLabels[ExpenseType.PARCELADA],
@@ -339,6 +338,8 @@ export default function Expenses() {
                                         }}
                                         onChange={(type) => setFilterType(type)}
                                         placeholder="Filtrar por tipo"
+                                        allowEmpty
+                                        emptyLabel="Todos os tipos"
                                     />
                                 </div>
                             </div>
@@ -350,7 +351,7 @@ export default function Expenses() {
                                             Busca: "{searchTerm}"
                                         </Badge>
                                     )}
-                                    {filterType !== 'all' && (
+                                    {filterType !== undefined && (
                                         <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
                                             Tipo: {ExpenseTypeLabels[Number(filterType) as ExpenseType]}
                                         </Badge>
@@ -441,7 +442,7 @@ export default function Expenses() {
                                                     <div className="flex items-center justify-between p-2 bg-blue-50 rounded">
                                                         <span className="text-sm text-blue-700 font-medium">Parcela: R${expense.amountOfEachInstallment}</span>
                                                         <Badge variant="outline" className="bg-blue-100 text-blue-700">
-                                                            {expense.currentInstallment} | {expense.totalInstallments} parcela{ expense.totalInstallments > 1 ? 's' : ''}
+                                                            {expense.currentInstallment} | {expense.totalInstallments} parcela{expense.totalInstallments > 1 ? 's' : ''}
                                                         </Badge>
                                                     </div>
                                                 )}
@@ -484,7 +485,7 @@ export default function Expenses() {
                                     placeholder="Ex: Aluguel, Conta de Luz, Mensalidade..."
                                     value={formData.name}
                                     onChange={(e) =>
-                                        setFormData({...formData, name: e.target.value})
+                                        setFormData({ ...formData, name: e.target.value })
                                     }
                                     required
                                     className="border-gray-300"
@@ -497,6 +498,8 @@ export default function Expenses() {
                                     value={formData.type}
                                     labels={ExpenseTypeLabels}
                                     onChange={(type) => {
+                                        if (type === undefined) return;
+
                                         setFormData({
                                             ...formData,
                                             type,
@@ -603,7 +606,7 @@ export default function Expenses() {
                                 <Input
                                     value={formData.name}
                                     onChange={(e) =>
-                                        setFormData({...formData, name: e.target.value})
+                                        setFormData({ ...formData, name: e.target.value })
                                     }
                                     required
                                     className="border-gray-300"
@@ -616,6 +619,8 @@ export default function Expenses() {
                                     value={formData.type}
                                     labels={ExpenseTypeLabels}
                                     onChange={(type) => {
+                                        if (type === undefined) return;
+
                                         setFormData({
                                             ...formData,
                                             type,

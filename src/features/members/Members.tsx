@@ -186,7 +186,7 @@ export default function Members() {
         await userService.registerUser(formData);
         toast.success('Membro criado com sucesso');
         setOpenCreate(false);
-        setFormData({ name: '', role: UserRole.MEMBRO});
+        setFormData({ name: '', role: UserRole.MEMBRO });
         await loadMembers();
     };
 
@@ -355,7 +355,10 @@ export default function Members() {
                                         <Label>Função</Label>
                                         <EnumSelect<UserRole>
                                             value={formData.role}
-                                            onChange={role => setFormData({ ...formData, role })}
+                                            onChange={(role) => {
+                                                if (role === undefined) return;
+                                                setFormData({ ...formData, role });
+                                            }}
                                             labels={UserRoleLabels}
                                         />
                                     </div>
@@ -438,11 +441,11 @@ export default function Members() {
                     <CardContent className="mt-6 flex flex-col gap-4">
                         {loading ? (
                             <div className="space-y-3">
-                                {[1,2,3].map(i => <Skeleton key={i} className="h-12 w-full rounded-md"/>)}
+                                {[1, 2, 3].map(i => <Skeleton key={i} className="h-12 w-full rounded-md" />)}
                             </div>
                         ) : members.length === 0 ? (
                             <div className="text-center py-10 text-stone-500 space-y-4">
-                                <Users className="mx-auto mb-2"/>
+                                <Users className="mx-auto mb-2" />
                                 <div>Nenhum membro encontrado</div>
                                 {hasActiveFilters && (
                                     <Button
@@ -477,9 +480,9 @@ export default function Members() {
                                                             {member.detailsLoading ? (
                                                                 <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full animate-spin" />
                                                             ) : expandedIds.has(member.id) ? (
-                                                                <ChevronUp className="w-4 h-4"/>
+                                                                <ChevronUp className="w-4 h-4" />
                                                             ) : (
-                                                                <ChevronDown className="w-4 h-4"/>
+                                                                <ChevronDown className="w-4 h-4" />
                                                             )}
                                                         </Button>
                                                         <Button
@@ -488,7 +491,7 @@ export default function Members() {
                                                             onClick={() => setDeleteTarget(member)}
                                                             className="text-red-600 p-2"
                                                         >
-                                                            <Trash2 className="w-4 h-4"/>
+                                                            <Trash2 className="w-4 h-4" />
                                                         </Button>
                                                     </div>
                                                 </CardContent>
