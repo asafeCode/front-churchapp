@@ -14,7 +14,6 @@ export enum InflowType {
   DIZIMO = 0,
   OFERTA = 1,
   OUTROS = 2,
-  TODOS = 3,
 }
 
 export enum PaymentMethod {

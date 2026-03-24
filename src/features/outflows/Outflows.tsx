@@ -1,13 +1,13 @@
 'use client';
 
-import React, {useEffect, useState} from 'react';
-import {format} from 'date-fns';
-import type {CreateOutflowRequest, ResponseShortOutflow} from "../../models/outflow.model.ts";
-import {ExpenseType, PaymentMethod} from "../../models/enums.ts";
-import {outflowService} from "../../services/outflow.service.ts";
-import {expenseService} from "../../services/expense.service.ts";
-import {toast} from "sonner";
-import {DashboardLayout} from "../../components/layout/DashboardLayout.tsx";
+import React, { useEffect, useState } from 'react';
+import { format } from 'date-fns';
+import type { CreateOutflowRequest, ResponseShortOutflow } from "../../models/outflow.model.ts";
+import { ExpenseType, PaymentMethod } from "../../models/enums.ts";
+import { outflowService } from "../../services/outflow.service.ts";
+import { expenseService } from "../../services/expense.service.ts";
+import { toast } from "sonner";
+import { DashboardLayout } from "../../components/layout/DashboardLayout.tsx";
 import {
     Dialog,
     DialogContent,
@@ -16,7 +16,7 @@ import {
     DialogTitle,
     DialogTrigger
 } from "../../components/ui/dialog.tsx";
-import {Button} from "../../components/ui/button.tsx";
+import { Button } from "../../components/ui/button.tsx";
 import {
     Calendar,
     CalendarClock,
@@ -33,16 +33,16 @@ import {
     TrendingUp,
     X
 } from "lucide-react";
-import {Label} from "@radix-ui/react-label";
-import {Input} from "../../components/ui/input.tsx";
-import {EnumSelect} from "../../components/ui/enum-select.tsx";
-import {ExpenseTypeLabels, PaymentMethodLabels} from "../../models/enum-labels.ts";
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from "../../components/ui/select.tsx";
-import {Card, CardContent} from "../../components/ui/card.tsx";
-import {Badge} from "../../components/ui/badge.tsx";
-import {Skeleton} from "../../components/ui/skeleton.tsx";
-import type {ResponseExpenseJson} from "../../models/expense.model.ts";
-import {MoneyInput} from "../../components/ui/money-input.tsx";
+import { Label } from "@radix-ui/react-label";
+import { Input } from "../../components/ui/input.tsx";
+import { EnumSelect } from "../../components/ui/enum-select.tsx";
+import { ExpenseTypeLabels, PaymentMethodLabels } from "../../models/enum-labels.ts";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select.tsx";
+import { Card, CardContent } from "../../components/ui/card.tsx";
+import { Badge } from "../../components/ui/badge.tsx";
+import { Skeleton } from "../../components/ui/skeleton.tsx";
+import type { ResponseExpenseJson } from "../../models/expense.model.ts";
+import { MoneyInput } from "../../components/ui/money-input.tsx";
 import { ptBR } from "date-fns/locale";
 
 export default function Outflows() {
@@ -62,12 +62,23 @@ export default function Outflows() {
         { value: '1000+', label: 'Acima de R$ 1.000' }
     ];
 
+    const todayLocal = () => {
+        const now = new Date();
+        const offset = now.getTimezoneOffset() * 60000;
+        return new Date(now.getTime() - offset).toISOString().split('T')[0];
+    };
+
+    const parseLocalDate = (value: string) => {
+        const [year, month, day] = value.split('T')[0].split('-').map(Number);
+        return new Date(year, month - 1, day);
+    };
+
     // Filtros atualizados com tipo de despesa
     const [filters, setFilters] = useState({
         month: new Date().getMonth(),
         year: new Date().getFullYear(),
         expenseId: 'all',
-        expenseType: 'all' as string | ExpenseType,
+        expenseType: undefined as ExpenseType | undefined,
         amountRange: 'all',
     });
 
@@ -83,12 +94,13 @@ export default function Outflows() {
     };
 
     const [formData, setFormData] = useState<CreateOutflowRequest>({
-        date: format(new Date(), 'yyyy-MM-dd'),
+        date: todayLocal(),
         amount: 0,
         description: '',
         expenseId: '',
         paymentMethod: PaymentMethod.FISICO, // Adicionado campo obrigatório
     });
+
 
     /* ===================== LOAD ===================== */
 
@@ -131,7 +143,7 @@ export default function Outflows() {
             const response = await outflowService.getOutflows({
                 ...dateRange,
                 ExpenseId: filters.expenseId === 'all' ? undefined : filters.expenseId,
-                ExpenseType: filters.expenseType === 'all' ? undefined : filters.expenseType as ExpenseType,
+                ExpenseType: filters.expenseType,
                 AmountMin: filters.amountRange === 'all' ? undefined : amountMin,
                 AmountMax: filters.amountRange === 'all' ? undefined : amountMax,
             });
@@ -155,7 +167,7 @@ export default function Outflows() {
             month: new Date().getMonth(),
             year: new Date().getFullYear(),
             expenseId: 'all',
-            expenseType: 'all',
+            expenseType: undefined,
             amountRange: 'all',
         });
         toast.info("Filtros limpos");
@@ -163,7 +175,7 @@ export default function Outflows() {
 
     const hasActiveFilters = () => {
         return filters.expenseId !== 'all' ||
-            filters.expenseType !== 'all' ||
+            filters.expenseType !== undefined ||
             filters.amountRange !== 'all';
     };
 
@@ -194,7 +206,7 @@ export default function Outflows() {
         selectedExpense?.expenseType === ExpenseType.PARCELADA;
 
     const getExpenseBadgeColor = (type: ExpenseType) => {
-        switch(type) {
+        switch (type) {
             case ExpenseType.PARCELADA:
                 return 'bg-blue-100 text-blue-600 border-blue-200';
             case ExpenseType.FIXA:
@@ -207,7 +219,7 @@ export default function Outflows() {
     };
 
     const getExpenseIcon = (type: ExpenseType) => {
-        switch(type) {
+        switch (type) {
             case ExpenseType.PARCELADA:
                 return <CreditCard className="w-5 h-5 text-blue-600" />;
             case ExpenseType.FIXA:
@@ -220,7 +232,7 @@ export default function Outflows() {
     };
 
     const getPaymentMethodIcon = (method: PaymentMethod) => {
-        switch(method) {
+        switch (method) {
             case PaymentMethod.FISICO:
                 return <DollarSign className="w-4 h-4 text-blue-500" />;
             case PaymentMethod.DIGITAL:
@@ -257,7 +269,7 @@ export default function Outflows() {
         toast.success('Saída criada com sucesso');
         setOpenCreate(false);
         setFormData({
-            date: format(new Date(), 'yyyy-MM-dd'),
+            date: todayLocal(),
             amount: 0,
             description: '',
             expenseId: '',
@@ -327,8 +339,9 @@ export default function Outflows() {
                                             <Input
                                                 type="date"
                                                 value={formData.date}
+                                                max={todayLocal()}
                                                 onChange={(e) =>
-                                                    setFormData({...formData, date: e.target.value})
+                                                    setFormData({ ...formData, date: e.target.value })
                                                 }
                                                 required
                                                 className="border-gray-300"
@@ -340,9 +353,10 @@ export default function Outflows() {
                                             <EnumSelect
                                                 value={formData.paymentMethod}
                                                 labels={PaymentMethodLabels}
-                                                onChange={(paymentMethod) =>
-                                                    setFormData({...formData, paymentMethod})
-                                                }
+                                                onChange={(paymentMethod) => {
+                                                    if (paymentMethod === undefined) return;
+                                                    setFormData({ ...formData, paymentMethod });
+                                                }}
                                                 placeholder="Selecione o método"
                                             />
                                         </div>
@@ -360,7 +374,7 @@ export default function Outflows() {
                                             }}
                                         >
                                             <SelectTrigger className="border-gray-300">
-                                                <SelectValue placeholder="Selecione a despesa"/>
+                                                <SelectValue placeholder="Selecione a despesa" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 <SelectItem value="none">Selecione uma despesa</SelectItem>
@@ -497,7 +511,7 @@ export default function Outflows() {
                                             {getSelectedExpenseName()}
                                         </Badge>
                                     )}
-                                    {filters.expenseType !== 'all' && (
+                                    {filters.expenseType !== undefined && (
                                         <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 text-xs">
                                             Tipo: {ExpenseTypeLabels[filters.expenseType as ExpenseType]}
                                         </Badge>
@@ -525,8 +539,8 @@ export default function Outflows() {
                                         </SelectTrigger>
                                         <SelectContent>
                                             {[
-                                                'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-                                                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+                                                'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+                                                'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
                                             ].map((month, index) => (
                                                 <SelectItem key={index} value={index.toString()} className="text-sm">
                                                     {month}
@@ -589,12 +603,14 @@ export default function Outflows() {
                                 <div className="space-y-1.5 md:space-y-2">
                                     <Label className="text-xs md:text-sm text-gray-700">Tipo de Despesa</Label>
                                     <EnumSelect
-                                        value={Number(filters.expenseType)}
+                                        value={filters.expenseType}
                                         labels={ExpenseTypeLabels}
                                         onChange={(value) =>
-                                            setFilters({...filters, expenseType: value})
+                                            setFilters({ ...filters, expenseType: value })
                                         }
                                         placeholder="Selecione o tipo"
+                                        allowEmpty
+                                        emptyLabel='Todos os tipos'
                                     />
                                 </div>
 
@@ -635,7 +651,7 @@ export default function Outflows() {
                             </div>
                         ) : outflows.length === 0 ? (
                             <div className="flex flex-col items-center justify-center min-h-[300px] text-center p-6"
-                                 data-testid="empty-outflows-state">
+                                data-testid="empty-outflows-state">
                                 <div className="mb-6">
                                     <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-50 to-orange-50 flex items-center justify-center">
                                         <Calendar className="w-10 h-10 text-red-400" />
@@ -663,7 +679,7 @@ export default function Outflows() {
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                                 {outflows.map((outflow) => {
-                                    const formattedDate = new Date(outflow.date);
+                                    const formattedDate = parseLocalDate(outflow.date);
                                     const isToday = isTodayDate(formattedDate);
                                     const isRecent = isRecentDate(formattedDate, 7);
                                     const isInstallment = outflow.currentInstallment && outflow.totalInstallments;

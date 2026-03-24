@@ -2,7 +2,7 @@ import {InflowOrderBy, InflowType, OrderDirection, PaymentMethod} from './enums'
 
 // Request para criar um inflow
 export interface CreateInflowRequest {
-    date: string; // ISO date string (yyyy-MM-dd)
+    date: string; 
     type: InflowType;
     paymentMethod: PaymentMethod;
     amount: number | string;
@@ -35,8 +35,8 @@ export interface ResponseInflowsJson {
 
 // Filtros enviados para a API
 export interface InflowFilters {
-    InitialDate?: string;  // yyyy-MM-dd
-    EndDate?: string;    // yyyy-MM-dd
+    InitialDate?: string // ISO;  
+    EndDate?: string;    
     Type?: InflowType;
     PaymentMethod?: PaymentMethod;
     AmountMin?: number;
