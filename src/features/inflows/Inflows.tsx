@@ -386,15 +386,15 @@ export default function Inflows() {
                                 </Button>
                             </DialogTrigger>
 
-                            <DialogContent className="max-w-[560px] overflow-hidden border border-gray-200 bg-white p-0 gap-0 sm:rounded-2xl">
-                                <DialogHeader className="space-y-1 border-b border-gray-200 px-6 py-5">
-                                    <DialogTitle className="text-3xl font-semibold text-gray-900">Nova Entrada</DialogTitle>
+                            <DialogContent className="w-[calc(100vw-1rem)] max-w-[560px] max-h-[92vh] overflow-hidden border border-gray-200 bg-white p-0 gap-0 sm:rounded-2xl">
+                                <DialogHeader className="space-y-1 border-b border-gray-200 px-4 py-4 sm:px-6 sm:py-5">
+                                    <DialogTitle className="text-2xl font-semibold text-gray-900 sm:text-3xl">Nova Entrada</DialogTitle>
                                     <DialogDescription className="text-sm text-gray-500">
                                         Adicione uma nova entrada financeira.
                                     </DialogDescription>
                                 </DialogHeader>
 
-                                <form id="create-inflow-form" onSubmit={handleCreate} className="space-y-5 px-6 py-5">
+                                <form id="create-inflow-form" onSubmit={handleCreate} className="max-h-[calc(92vh-10rem)] space-y-4 overflow-y-auto px-4 py-4 sm:max-h-[calc(92vh-10.5rem)] sm:space-y-5 sm:px-6 sm:py-5">
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium text-gray-700">Valor</Label>
                                         <MoneyInput
@@ -424,7 +424,7 @@ export default function Inflows() {
                                                         key={type}
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, type })}
-                                                        className={`h-10 px-3 text-sm font-medium transition-colors ${
+                                                        className={`h-10 px-2 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
                                                             isActive
                                                                 ? 'bg-green-600 text-white'
                                                                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -448,7 +448,7 @@ export default function Inflows() {
                                                         key={paymentMethod}
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, paymentMethod })}
-                                                        className={`h-10 px-3 text-sm font-medium transition-colors ${
+                                                        className={`h-10 px-2 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
                                                             isActive
                                                                 ? 'bg-green-600 text-white'
                                                                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -522,7 +522,7 @@ export default function Inflows() {
                                             />
 
                                             {showMemberOptions && (
-                                                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-56 overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+                                                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg sm:max-h-56">
                                                     <button
                                                         type="button"
                                                         onMouseDown={(e) => e.preventDefault()}
@@ -587,7 +587,7 @@ export default function Inflows() {
                                     </div>
                                 </form>
 
-                                <div className="border-t border-gray-200 px-6 py-4">
+                                <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
                                     <Button
                                         type="submit"
                                         form="create-inflow-form"
