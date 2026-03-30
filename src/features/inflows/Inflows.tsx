@@ -23,6 +23,8 @@ import {
     Filter,
     X,
     Calendar,
+    Check,
+    Search,
     User,
     Music,
     ArrowUpDown,
@@ -52,6 +54,7 @@ import { Badge } from "../../components/ui/badge.tsx";
 import { Skeleton } from "../../components/ui/skeleton.tsx";
 import { MoneyInput } from "../../components/ui/money-input.tsx";
 import { ptBR } from "date-fns/locale";
+import { Checkbox } from "../../components/ui/checkbox.tsx";
 
 export default function Inflows() {
     const [inflows, setInflows] = useState<ResponseInflowJson[]>([]);
@@ -61,6 +64,8 @@ export default function Inflows() {
     const [loading, setLoading] = useState(true);
     const [openCreate, setOpenCreate] = useState(false);
     const [showFilters, setShowFilters] = useState(false);
+    const [memberSearch, setMemberSearch] = useState('');
+    const [showMemberOptions, setShowMemberOptions] = useState(false);
 
     // Presets de valores para filtro
     const amountPresets = [
@@ -102,6 +107,8 @@ export default function Inflows() {
         worshipId: undefined,
         userId: undefined,
     });
+    const inflowTypeOptions = [InflowType.DIZIMO, InflowType.OFERTA, InflowType.OUTROS];
+    const paymentMethodOptions = [PaymentMethod.FISICO, PaymentMethod.DIGITAL];
 
     /* ===================== LOAD ===================== */
 
@@ -232,6 +239,11 @@ export default function Inflows() {
         return preset?.label || 'Todos os valores';
     };
 
+    const getSelectedCreateMember = () => {
+        if (!formData.userId) return null;
+        return members.find((member) => member.id === formData.userId) ?? null;
+    };
+
     const parseLocalDate = (value: string) => {
         const [year, month, day] = value.split('T')[0].split('-').map(Number);
         return new Date(year, month - 1, day);
@@ -270,6 +282,45 @@ export default function Inflows() {
         }
     };
 
+    const filteredMembers = members.filter((member) =>
+        member.name.toLowerCase().includes(memberSearch.trim().toLowerCase())
+    );
+
+    const resetCreateForm = () => {
+        setFormData({
+            date: new Date().toISOString().split('T')[0],
+            type: InflowType.DIZIMO,
+            paymentMethod: PaymentMethod.FISICO,
+            amount: 0,
+            description: '',
+            worshipId: undefined,
+            userId: undefined,
+        });
+        setMemberSearch('');
+        setShowMemberOptions(false);
+    };
+
+    const handleSelectMember = (member?: UserProfiles) => {
+        setFormData((current) => ({
+            ...current,
+            userId: member?.id,
+        }));
+        setMemberSearch(member?.name ?? '');
+        setShowMemberOptions(false);
+    };
+
+    const handleCreateDialogChange = (open: boolean) => {
+        setOpenCreate(open);
+
+        if (open) {
+            const selectedMember = getSelectedCreateMember();
+            setMemberSearch(selectedMember?.name ?? '');
+            return;
+        }
+
+        resetCreateForm();
+    };
+
     /* ===================== CREATE ===================== */
 
     const handleCreate = async (e: React.FormEvent) => {
@@ -284,15 +335,7 @@ export default function Inflows() {
 
         toast.success('Entrada criada com sucesso');
         setOpenCreate(false);
-        setFormData({
-            date: new Date().toISOString(),
-            type: InflowType.DIZIMO,
-            paymentMethod: PaymentMethod.FISICO,
-            amount: 0,
-            description: '',
-            worshipId: undefined,
-            userId: undefined,
-        });
+        resetCreateForm();
 
         loadInflows();
     };
@@ -334,7 +377,7 @@ export default function Inflows() {
                             )}
                         </Button>
 
-                        <Dialog open={openCreate} onOpenChange={setOpenCreate}>
+                        <Dialog open={openCreate} onOpenChange={handleCreateDialogChange}>
                             <DialogTrigger asChild>
                                 <Button className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white">
                                     <Plus className="w-4 h-4" />
@@ -343,18 +386,84 @@ export default function Inflows() {
                                 </Button>
                             </DialogTrigger>
 
-                            <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>Criar Entrada</DialogTitle>
-                                    <DialogDescription>
-                                        Adicione uma nova entrada financeira
+                            <DialogContent className="max-w-[560px] overflow-hidden border border-gray-200 bg-white p-0 gap-0 sm:rounded-2xl">
+                                <DialogHeader className="space-y-1 border-b border-gray-200 px-6 py-5">
+                                    <DialogTitle className="text-3xl font-semibold text-gray-900">Nova Entrada</DialogTitle>
+                                    <DialogDescription className="text-sm text-gray-500">
+                                        Adicione uma nova entrada financeira.
                                     </DialogDescription>
                                 </DialogHeader>
 
-                                <form onSubmit={handleCreate} className="space-y-4">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <form id="create-inflow-form" onSubmit={handleCreate} className="space-y-5 px-6 py-5">
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-700">Valor</Label>
+                                        <MoneyInput
+                                            value={
+                                                formData.amount
+                                                    ? String(formData.amount)
+                                                    : ""
+                                            }
+                                            onChange={(value) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    amount: Number(value)
+                                                })
+                                            }
+                                            className="h-11 border-gray-300 text-base"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-700">Tipo</Label>
+                                        <div className="grid grid-cols-3 overflow-hidden rounded-md border border-gray-300 bg-white">
+                                            {inflowTypeOptions.map((type, index) => {
+                                                const isActive = formData.type === type;
+
+                                                return (
+                                                    <button
+                                                        key={type}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, type })}
+                                                        className={`h-10 px-3 text-sm font-medium transition-colors ${
+                                                            isActive
+                                                                ? 'bg-green-600 text-white'
+                                                                : 'bg-white text-gray-700 hover:bg-gray-50'
+                                                        } ${index < inflowTypeOptions.length - 1 ? 'border-r border-gray-300' : ''}`}
+                                                    >
+                                                        {InflowTypeLabels[type]}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-sm font-medium text-gray-700">Método de Pagamento</Label>
+                                        <div className="grid grid-cols-2 overflow-hidden rounded-md border border-gray-300 bg-white">
+                                            {paymentMethodOptions.map((paymentMethod, index) => {
+                                                const isActive = formData.paymentMethod === paymentMethod;
+
+                                                return (
+                                                    <button
+                                                        key={paymentMethod}
+                                                        type="button"
+                                                        onClick={() => setFormData({ ...formData, paymentMethod })}
+                                                        className={`h-10 px-3 text-sm font-medium transition-colors ${
+                                                            isActive
+                                                                ? 'bg-green-600 text-white'
+                                                                : 'bg-white text-gray-700 hover:bg-gray-50'
+                                                        } ${index < paymentMethodOptions.length - 1 ? 'border-r border-gray-300' : ''}`}
+                                                    >
+                                                        {PaymentMethodLabels[paymentMethod]}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="space-y-2">
-                                            <Label className="text-gray-700">Data</Label>
+                                            <Label className="text-sm font-medium text-gray-700">Data da entrada</Label>
                                             <Input
                                                 type="date"
                                                 value={formData.date}
@@ -363,107 +472,107 @@ export default function Inflows() {
                                                     setFormData({ ...formData, date: e.target.value })
                                                 }
                                                 required
-                                                className="border-gray-300"
+                                                className="h-11 border-gray-300"
                                             />
                                         </div>
 
                                         <div className="space-y-2">
-                                            <Label className="text-gray-700">Tipo</Label>
-                                            <EnumSelect
-                                                value={formData.type}
-                                                labels={InflowTypeLabels}
-                                                onChange={(type) => {
-                                                    if (type === undefined) return;
-                                                    setFormData({ ...formData, type });
-                                                }}
-                                                placeholder="Selecione o tipo"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-700">Método de Pagamento</Label>
-                                            <EnumSelect
-                                                value={formData.paymentMethod}
-                                                labels={PaymentMethodLabels}
-                                                onChange={(paymentMethod) => {
-                                                    if (paymentMethod === undefined) return;
-                                                    setFormData({ ...formData, paymentMethod });
-                                                }}
-                                                placeholder="Selecione o método"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-2">
-                                            <Label className="text-gray-700">Valor</Label>
-                                            <MoneyInput
-                                                value={
-                                                    formData.amount
-                                                        ? String(formData.amount)
-                                                        : ""
-                                                }
-                                                onChange={(value) =>
+                                            <Label className="text-sm font-medium text-gray-700">Culto</Label>
+                                            <Select
+                                                value={formData.worshipId ?? 'none'}
+                                                onValueChange={(value) =>
                                                     setFormData({
                                                         ...formData,
-                                                        amount: Number(value)
+                                                        worshipId: value === 'none' ? undefined : value,
                                                     })
                                                 }
-                                                className="border-gray-300"
-                                            />
+                                            >
+                                                <SelectTrigger className="h-11 border-gray-300">
+                                                    <SelectValue placeholder="Nenhum" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">Nenhum</SelectItem>
+                                                    {worships.map((worship) => (
+                                                        <SelectItem key={worship.id} value={worship.id}>
+                                                            {DayOfWeekLabels[worship.dayOfWeek]} | {worship.time}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
                                         </div>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-gray-700">Membro</Label>
-                                        <Select
-                                            value={formData.userId ?? 'none'}
-                                            onValueChange={(value) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    userId: value === 'none' ? undefined : value,
-                                                })
-                                            }
-                                        >
-                                            <SelectTrigger className="border-gray-300">
-                                                <SelectValue placeholder="Selecione um membro" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">Nenhum</SelectItem>
-                                                {members.map((m) => (
-                                                    <SelectItem key={m.id} value={m.id}>
-                                                        {m.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
+                                        <Label className="text-sm font-medium text-gray-700">Membro</Label>
+                                        <div className="relative">
+                                            <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                                            <Input
+                                                value={memberSearch}
+                                                onChange={(e) => {
+                                                    setMemberSearch(e.target.value);
+                                                    setFormData({ ...formData, userId: undefined });
+                                                    setShowMemberOptions(true);
+                                                }}
+                                                onFocus={() => setShowMemberOptions(true)}
+                                                onBlur={() => {
+                                                    window.setTimeout(() => setShowMemberOptions(false), 120);
+                                                }}
+                                                placeholder="Selecionar membro"
+                                                className="h-11 border-gray-300 pl-10 pr-3"
+                                            />
+
+                                            {showMemberOptions && (
+                                                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-56 overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg">
+                                                    <button
+                                                        type="button"
+                                                        onMouseDown={(e) => e.preventDefault()}
+                                                        onClick={() => handleSelectMember(undefined)}
+                                                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                                    >
+                                                        <span>Sem membro identificado</span>
+                                                        {!formData.userId && memberSearch.trim() === '' && (
+                                                            <Check className="h-4 w-4 text-green-600" />
+                                                        )}
+                                                    </button>
+
+                                                    {filteredMembers.length === 0 ? (
+                                                        <div className="px-3 py-2 text-sm text-gray-500">
+                                                            Nenhum membro encontrado
+                                                        </div>
+                                                    ) : (
+                                                        filteredMembers.slice(0, 8).map((member) => (
+                                                            <button
+                                                                key={member.id}
+                                                                type="button"
+                                                                onMouseDown={(e) => e.preventDefault()}
+                                                                onClick={() => handleSelectMember(member)}
+                                                                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                                            >
+                                                                <span>{member.name}</span>
+                                                                {formData.userId === member.id && (
+                                                                    <Check className="h-4 w-4 text-green-600" />
+                                                                )}
+                                                            </button>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <label className="flex items-center gap-2 text-sm text-gray-600">
+                                            <Checkbox
+                                                checked={!formData.userId && memberSearch.trim() === ''}
+                                                onCheckedChange={(checked) => {
+                                                    if (!checked) return;
+                                                    handleSelectMember(undefined);
+                                                }}
+                                            />
+                                            <span>Entrada sem membro identificado</span>
+                                        </label>
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-gray-700">Culto</Label>
-                                        <Select
-                                            value={formData.worshipId ?? 'none'}
-                                            onValueChange={(value) =>
-                                                setFormData({
-                                                    ...formData,
-                                                    worshipId: value === 'none' ? undefined : value,
-                                                })
-                                            }
-                                        >
-                                            <SelectTrigger className="border-gray-300">
-                                                <SelectValue placeholder="Selecione um culto" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">Nenhum</SelectItem>
-                                                {worships.map((worship) => (
-                                                    <SelectItem key={worship.id} value={worship.id}>
-                                                        {DayOfWeekLabels[worship.dayOfWeek]} | {worship.time}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <Label className="text-gray-700">Descrição (Opcional)</Label>
+                                        <Label className="text-sm font-medium text-gray-700">Descrição (Opcional)</Label>
                                         <Input
                                             value={formData.description}
                                             onChange={(e) =>
@@ -473,14 +582,20 @@ export default function Inflows() {
                                                 })
                                             }
                                             placeholder="Descrição adicional"
-                                            className="border-gray-300"
+                                            className="h-11 border-gray-300"
                                         />
                                     </div>
+                                </form>
 
-                                    <Button type="submit" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                                <div className="border-t border-gray-200 px-6 py-4">
+                                    <Button
+                                        type="submit"
+                                        form="create-inflow-form"
+                                        className="h-11 w-full bg-green-600 text-base font-semibold text-white hover:bg-green-700"
+                                    >
                                         Criar Entrada
                                     </Button>
-                                </form>
+                                </div>
                             </DialogContent>
                         </Dialog>
                     </div>
@@ -737,7 +852,7 @@ export default function Inflows() {
                                             }
                                             placeholder="Ordenar por"
                                             allowEmpty
-                                            emptyLabel='Padräo'
+                                            emptyLabel='Padrão'
                                         />
                                     </div>
 
