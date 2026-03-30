@@ -386,15 +386,15 @@ export default function Inflows() {
                                 </Button>
                             </DialogTrigger>
 
-                            <DialogContent className="w-[calc(100vw-1rem)] max-w-[560px] max-h-[92vh] overflow-hidden border border-gray-200 bg-white p-0 gap-0 sm:rounded-2xl">
-                                <DialogHeader className="space-y-1 border-b border-gray-200 px-4 py-4 sm:px-6 sm:py-5">
-                                    <DialogTitle className="text-2xl font-semibold text-gray-900 sm:text-3xl">Nova Entrada</DialogTitle>
-                                    <DialogDescription className="text-sm text-gray-500">
+                            <DialogContent className="w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] sm:max-w-[560px] overflow-x-hidden overflow-y-hidden border border-gray-200 bg-white p-0 gap-0 sm:rounded-2xl">
+                                <DialogHeader className="space-y-0.5 border-b border-gray-200 px-4 py-3 sm:space-y-1 sm:px-6 sm:py-5">
+                                    <DialogTitle className="pr-8 text-xl font-semibold leading-tight text-gray-900 sm:text-3xl">Nova Entrada</DialogTitle>
+                                    <DialogDescription className="text-xs text-gray-500 sm:text-sm">
                                         Adicione uma nova entrada financeira.
                                     </DialogDescription>
                                 </DialogHeader>
 
-                                <form id="create-inflow-form" onSubmit={handleCreate} className="max-h-[calc(92vh-10rem)] space-y-4 overflow-y-auto px-4 py-4 sm:max-h-[calc(92vh-10.5rem)] sm:space-y-5 sm:px-6 sm:py-5">
+                                <form id="create-inflow-form" onSubmit={handleCreate} className="space-y-3 overflow-x-hidden px-4 py-3 sm:space-y-5 sm:px-6 sm:py-5">
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium text-gray-700">Valor</Label>
                                         <MoneyInput
@@ -409,7 +409,7 @@ export default function Inflows() {
                                                     amount: Number(value)
                                                 })
                                             }
-                                            className="h-11 border-gray-300 text-base"
+                                            className="h-11 min-w-0 border-gray-300 text-base"
                                         />
                                     </div>
 
@@ -424,7 +424,7 @@ export default function Inflows() {
                                                         key={type}
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, type })}
-                                                        className={`h-10 px-2 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                                                        className={`min-w-0 truncate h-9 px-2 text-[11px] font-medium transition-colors sm:h-10 sm:px-3 sm:text-sm ${
                                                             isActive
                                                                 ? 'bg-green-600 text-white'
                                                                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -448,7 +448,7 @@ export default function Inflows() {
                                                         key={paymentMethod}
                                                         type="button"
                                                         onClick={() => setFormData({ ...formData, paymentMethod })}
-                                                        className={`h-10 px-2 text-xs font-medium transition-colors sm:px-3 sm:text-sm ${
+                                                        className={`min-w-0 truncate h-9 px-2 text-[11px] font-medium transition-colors sm:h-10 sm:px-3 sm:text-sm ${
                                                             isActive
                                                                 ? 'bg-green-600 text-white'
                                                                 : 'bg-white text-gray-700 hover:bg-gray-50'
@@ -462,7 +462,7 @@ export default function Inflows() {
                                     </div>
 
                                     <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div className="space-y-2">
+                                        <div className="min-w-0 space-y-2">
                                             <Label className="text-sm font-medium text-gray-700">Data da entrada</Label>
                                             <Input
                                                 type="date"
@@ -472,11 +472,11 @@ export default function Inflows() {
                                                     setFormData({ ...formData, date: e.target.value })
                                                 }
                                                 required
-                                                className="h-11 border-gray-300"
+                                                className="h-10 min-w-0 border-gray-300 sm:h-11"
                                             />
                                         </div>
 
-                                        <div className="space-y-2">
+                                        <div className="min-w-0 space-y-2">
                                             <Label className="text-sm font-medium text-gray-700">Culto</Label>
                                             <Select
                                                 value={formData.worshipId ?? 'none'}
@@ -487,7 +487,7 @@ export default function Inflows() {
                                                     })
                                                 }
                                             >
-                                                <SelectTrigger className="h-11 border-gray-300">
+                                                <SelectTrigger className="h-10 min-w-0 border-gray-300 sm:h-11">
                                                     <SelectValue placeholder="Nenhum" />
                                                 </SelectTrigger>
                                                 <SelectContent>
@@ -504,7 +504,7 @@ export default function Inflows() {
 
                                     <div className="space-y-2">
                                         <Label className="text-sm font-medium text-gray-700">Membro</Label>
-                                        <div className="relative">
+                                        <div className="relative min-w-0">
                                             <Search className="pointer-events-none absolute left-3 top-1/2 z-10 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                             <Input
                                                 value={memberSearch}
@@ -518,18 +518,18 @@ export default function Inflows() {
                                                     window.setTimeout(() => setShowMemberOptions(false), 120);
                                                 }}
                                                 placeholder="Selecionar membro"
-                                                className="h-11 border-gray-300 pl-10 pr-3"
+                                                className="h-10 min-w-0 border-gray-300 pl-10 pr-3 sm:h-11"
                                             />
 
                                             {showMemberOptions && (
-                                                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-40 overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg sm:max-h-56">
+                                                <div className="absolute left-0 right-0 top-[calc(100%+0.5rem)] z-50 max-h-40 overflow-x-hidden overflow-y-auto rounded-md border border-gray-200 bg-white p-1 shadow-lg sm:max-h-56">
                                                     <button
                                                         type="button"
                                                         onMouseDown={(e) => e.preventDefault()}
                                                         onClick={() => handleSelectMember(undefined)}
-                                                        className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                                        className="flex w-full min-w-0 items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                                     >
-                                                        <span>Sem membro identificado</span>
+                                                        <span className="truncate">Sem membro identificado</span>
                                                         {!formData.userId && memberSearch.trim() === '' && (
                                                             <Check className="h-4 w-4 text-green-600" />
                                                         )}
@@ -546,9 +546,9 @@ export default function Inflows() {
                                                                 type="button"
                                                                 onMouseDown={(e) => e.preventDefault()}
                                                                 onClick={() => handleSelectMember(member)}
-                                                                className="flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                                                                className="flex w-full min-w-0 items-center justify-between rounded-md px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
                                                             >
-                                                                <span>{member.name}</span>
+                                                                <span className="truncate">{member.name}</span>
                                                                 {formData.userId === member.id && (
                                                                     <Check className="h-4 w-4 text-green-600" />
                                                                 )}
@@ -582,16 +582,16 @@ export default function Inflows() {
                                                 })
                                             }
                                             placeholder="Descrição adicional"
-                                            className="h-11 border-gray-300"
+                                            className="h-10 min-w-0 border-gray-300 sm:h-11"
                                         />
                                     </div>
                                 </form>
 
-                                <div className="border-t border-gray-200 bg-white px-4 py-4 sm:px-6">
+                                <div className="border-t border-gray-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
                                     <Button
                                         type="submit"
                                         form="create-inflow-form"
-                                        className="h-11 w-full bg-green-600 text-base font-semibold text-white hover:bg-green-700"
+                                        className="h-10 w-full bg-green-600 text-sm font-semibold text-white hover:bg-green-700 sm:h-11 sm:text-base"
                                     >
                                         Criar Entrada
                                     </Button>
